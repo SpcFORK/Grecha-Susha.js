@@ -1,5 +1,7 @@
 let Methods = (cw, class_) => new Object({
 
+  element: cw?.element || cw,
+
   __LOREM__() { return class_.LOREM },
   get LOREM() { return cw.__LOREM__() },
 
@@ -7,7 +9,7 @@ let Methods = (cw, class_) => new Object({
     if (Array.isArray(value)) {
       value = value.join(' ');
     }
-    
+
     cw.element.setAttribute(name, value);
     return cw;
   },
@@ -173,7 +175,7 @@ let Methods = (cw, class_) => new Object({
     return cw;
   },
 
-  // Additional methods to be included in the ElementWrapper class
+  // Additional methods to be included in the class_ class
 
   // Set a placeholder attribute for an input element
   placeholder$(placeholderValue) {
@@ -280,8 +282,10 @@ let Methods = (cw, class_) => new Object({
   },
 
   str$() {
-    return cw.element.outerHTML;
-
+    return (
+      cw.element?.outerHTML
+      || cw.element?.innerHTML
+    );
   },
 
 })

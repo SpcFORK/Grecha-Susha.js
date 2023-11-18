@@ -717,56 +717,54 @@ class Grecha {
       createDocument(...args) {
         return new DOMParser()
           .parseFromString(
-            nodesToString(args), 
+            args, 
             "text/html"
           )
       },
 
       SushaTemplates: {
-        get document() {
-          return createDocument(
-            html(
-              head(),
+        get ExampleDocument() {
+          return html(
+            head(),
 
-              body(
-                main(
-                  article(
-                    section(
+            body(
+              main(
+                article(
+                  section(
 
-                      h1('Hello World!')
-                        .att$('class', 'title')
-                      ,
+                    h1('Hello World!')
+                      .att$('class', 'title')
+                    ,
 
-                      small('From Susha.')
-                        .att$('class', 'subtitle')
-                      ,
+                    small('From Susha.')
+                      .att$('class', 'subtitle')
+                    ,
 
-                      hr(),
-                      br(),
+                    hr(),
+                    br(),
 
-                      p('This is a template.')
-                        .att$('class', 'content')
-                      ,
+                    p('This is a template.')
+                      .att$('class', 'content')
+                    ,
 
-                      p('It is <strong>very</strong> <em>simple</em>.')
-                        .att$('class', 'content')
-                      ,
+                    p('It is <strong>very</strong> <em>simple</em>.')
+                      .att$('class', 'content')
+                    ,
 
-                      p('Susha allows you to create templates much like React.')
-                        .att$('class', 'content')
-                      ,
+                    p('Susha allows you to create templates much like React.')
+                      .att$('class', 'content')
+                    ,
 
-                      p('(But is waaaay better!!)')
-                        .att$('class', 'content')
-                    )
+                    p('(But is waaaay better!!)')
+                      .att$('class', 'content')
                   )
-                    .att$('class', 'main')
                 )
+                  .att$('class', 'main')
+              )
 
-              ) // @BODY
+            ) // @BODY
 
-            ) // @HTML
-          )
+          ) // @HTML
         },
       }
 

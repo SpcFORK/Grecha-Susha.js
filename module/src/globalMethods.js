@@ -6,6 +6,10 @@ const windowMethods = {
 
   tag,
 
+  htmlDoc(...nodes) {
+    return tag('', ...nodes);
+  },
+
   // @ Basic
   img(src) {
     // return new ElementWrapper("img").att$("src", src).get$();
@@ -272,22 +276,61 @@ const windowMethods = {
 
   depadString,
 
-  createDocument(...args) {
-    return tag(
-      new DOMParser()
-      .parseFromString(args, "text/html")
-    )
+  nodesToString(...nodes) {
+    return nodes.map(n => n.outerHTML).join("");
   },
 
-  renderDocument(doc) {
-    return document.replaceChildren(doc);
+  createDocument(...args) {
+    return new DOMParser()
+      .parseFromString(
+        args,
+        "text/html"
+      )
   },
 
   SushaTemplates: {
-    get document() {
-      return createDocument(
+    get ExampleDocument() {
+      return html(
+        head(),
 
-      )
+        body(
+          main(
+            article(
+              section(
+
+                h1('Hello World!')
+                  .att$('class', 'title')
+                ,
+
+                small('From Susha.')
+                  .att$('class', 'subtitle')
+                ,
+
+                hr(),
+                br(),
+
+                p('This is a template.')
+                  .att$('class', 'content')
+                ,
+
+                p('It is <strong>very</strong> <em>simple</em>.')
+                  .att$('class', 'content')
+                ,
+
+                p('Susha allows you to create templates much like React.')
+                  .att$('class', 'content')
+                ,
+
+                p('(But is waaaay better!!)')
+                  .att$('class', 'content')
+              )
+            )
+              .att$('class', 'main')
+          )
+
+        ) // @BODY
+
+      ) // @HTML
     },
   }
 
