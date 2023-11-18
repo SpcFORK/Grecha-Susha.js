@@ -176,6 +176,14 @@ const windowMethods = {
 
   },
 
+  __spreadArray: (
+    (this && this.__spreadArray) || function(to, from) {
+      for (var i = 0, il = from.length, j = to.length; i < il; i++, j++)
+        to[j] = from[i];
+      return to;
+    }
+  ),
+
   tabSwitcher(names, choose) {
     return div(
       ...names.map((name, i) => {
@@ -288,6 +296,8 @@ const windowMethods = {
       )
   },
 
+
+  // @ Expert
   SushaTemplates: {
     get ExampleDocument() {
       return html(
@@ -332,8 +342,572 @@ const windowMethods = {
 
       ) // @HTML
     },
-  }
+  },
 
+  SushaServiceBuilder: {
+    get ServiceWorker() {
+      return navigator?.serviceWorker || false
+    },
+
+    get cacheBuilder() {
+      return class CacheBuilder {
+        constructor(name, files) {
+          this.name = name;
+          this.files = files || [];
+          this._runner();
+
+          if (files) {
+            for (const file of files) {
+              this.add(file);
+            }
+          }
+
+        }
+
+        async _runner() {
+          const cache = await this.init();
+
+          this.cache = cache;
+          return cache;
+        }
+
+        async _beforeHandler() {
+          if (!this.cache) {
+            await this._runner();
+          }
+
+          function _handler() {
+            // Helper to delete a specific cache if it doesn't match the current cache name
+            function deleteCacheIfNotCurrent(cache, cacheName) {
+              if (cache !== cacheName) {
+                console.log('Service Worker: Clearing Old Cache');
+                return caches.delete(cache);
+              }
+            }
+
+            // Helper to clear all caches that are not the current one
+            function clearOldCaches(cacheName) {
+              caches.keys().then(cacheNames => {
+                return Promise.all(cacheNames.map(cache => deleteCacheIfNotCurrent(cache, cacheName)));
+              });
+            }
+
+            // Helper to clear all caches
+            clearOldCaches(this.name);
+          }
+
+          // Call Activate Event 
+          self.addEventListener('activate', e => {
+            console.log('Service Worker: Activated  ', e);
+            e.waitUntil(
+              _handler()
+            );
+          })
+
+          // ---
+
+          async function fetchHandle(e) {
+            try {
+              const res = await fetch(e.request);
+              const resClone = res.clone();
+              caches.open(cacheName)
+                .then(cache => {
+                  cache.put(e.request, resClone);
+                });
+              return res;
+            } catch (err) {
+              const res_1 = await caches.match(e.request);
+              return res_1;
+            }
+          }
+
+          // Call Fetch Event  
+          self.addEventListener('fetch', e => {
+            console.log('Service Worker: Fetching');
+            e.respondWith(
+              fetchHandle(e)
+            );
+          });
+
+          return this.cache;
+        }
+
+        async init(catch_ = () => { }) {
+          const cache = caches.open(this.name)
+
+          cache.catch(catch_)
+
+          return await cache;
+        }
+
+        async add(...urls) {
+          let hr_ = await this._SbeforeHandler();
+
+          if (!hr_) throw new Error("ADD: No cache found...?");
+
+          const urls_ = urls.map(url => {
+            if (typeof url === "string") {
+              return new URL(url, location.href)
+            } else {
+              return url;
+            }
+
+          });
+
+          // Call install Event 
+          self.addEventListener('install', e => {
+            // Wait until promise is finished  
+            e.waitUntil(
+              hr_.addAll(urls_)
+                .catch(err => {
+                  console.error(err);
+                })
+
+                .then(() => {
+                  console.log('Service Worker Cache Updated');
+                  return self.skipWaiting();
+
+                })
+
+                .catch(err => {
+                  console.error(err);
+                })
+            );
+          })
+        }
+      }
+    },
+
+    _EstWorker(workerPath) {
+      let sw = SushaServiceBuilder.ServiceWorker;
+
+      if (!sw) {
+        throw new Error(
+          "Unable to register service worker. Your browser or machine may not support it."
+        );
+      }
+
+      return sw.register(workerPath) // Promise
+    },
+
+    buildCache(cacheName) {
+
+    },
+
+    buildWorker(workerPath, cb, catch_) {
+      return SushaServiceBuilder._EstWorker(workerPath)
+        .then(() => {
+          if (cb) cb();
+        })
+        .catch(a => { if (catch_) { catch_(a) } });
+    },
+  },
+
+  SushaWorker: {
+
+    get Worker() {
+      return window?.Worker || false;
+    },
+
+    createWorker(src, options, woptions = {}) {
+      {
+        !onmessage
+          ? onmessage = (event) => {
+            if (
+              event.data instanceof Object &&
+              Object.hasOwn(event.data, "queryMethod") &&
+              Object.hasOwn(event.data, "queryMethodArguments")
+            ) {
+              (woptions?.queryableFunctions || queryableFunctions)[event.data.queryMethod].apply(
+                self,
+                event.data.queryMethodArguments,
+              );
+            } else {
+              woptions?.default?.(event.data);
+            }
+          }
+
+          : null
+      }
+
+      if (!SushaWorker.Worker) {
+        throw new Error('Workers are not supported in this environment.');
+      }
+
+      const worker = new Worker(src, options);
+      Object.assign(worker, woptions);
+      return worker;
+    },
+
+    get SharedWorker() {
+      return window?.SharedWorker || false;
+    },
+
+    createSharedWorker(src, options, woptions = {}) {
+      if (!SushaWorker.SharedWorker) {
+        throw new Error('SharedWorkers are not supported in this environment.');
+      }
+
+      const sharedWorker = new SharedWorker(src, options);
+      Object.assign(sharedWorker, woptions);
+
+      sharedWorker.port.onmessage = function(e) {
+        if (e.data?.type === 'result') {
+          console.log('Received message from shared worker:', e.data);
+        }
+      };
+
+      sharedWorker.port.start();
+
+      return {
+        ...sharedWorker,
+        sendQuery(queryMethod, ...queryMethodArguments) {
+          if (!queryMethod) {
+            throw new TypeError(
+              "sendQuery requires at least one argument for the query method."
+            );
+          }
+          sharedWorker.port.postMessage({
+            queryMethod,
+            queryMethodArguments,
+          });
+        }
+      };
+    },
+
+    queryableWorker() {
+      return class QueryableWorker {
+        constructor(url, defaultListener = () => { }, onError) {
+          this.worker = new Worker(url);
+          this.listeners = {};
+          this.defaultListener = defaultListener;
+
+          if (onError) {
+            this.worker.onerror = onError;
+          }
+
+          this.worker.onmessage = (event) => {
+            if (event.data instanceof Object && event.data.queryMethodListener && this.listeners[event.data.queryMethodListener]) {
+              this.listeners[event.data.queryMethodListener].apply(this, event.data.queryMethodArguments);
+            } else {
+              this.defaultListener(event.data);
+            }
+          };
+        }
+
+        postMessage(message) {
+          this.worker.postMessage(message);
+        }
+
+        terminate() {
+          this.worker.terminate();
+        }
+
+        addListener(name, listener) {
+          this.listeners[name] = listener;
+        }
+
+        removeListener(name) {
+          delete this.listeners[name];
+        }
+
+        sendQuery(queryMethod, ...queryMethodArguments) {
+          if (!queryMethod) {
+            throw new TypeError("QueryableWorker.sendQuery takes at least one argument");
+          }
+          this.worker.postMessage({ queryMethod, queryMethodArguments });
+        }
+      }
+    },
+
+    replyQuery(queryMethodListener, ...queryMethodArguments) {
+      if (!queryMethodListener) {
+        throw new TypeError("reply - takes at least one argument");
+      }
+      postMessage({
+        queryMethodListener,
+        queryMethodArguments,
+      });
+    },
+
+    emulateMessage(vVal) {
+      try {
+        return JSON.parse(JSON.stringify(vVal));
+      } catch (e) {
+        console.error('Failed to emulate message:', e);
+      }
+    }
+  },
+
+  DCSS: {
+    allCSS: {
+      txt: (
+        [...document.styleSheets]
+          .map((styleSheet) => {
+            try {
+              return [...styleSheet.cssRules].map((rule) => rule.cssText).join("");
+            } catch (e) {
+              console.log(
+                "Access to stylesheet %s is denied. Ignoring…",
+                styleSheet.href,
+              );
+            }
+          })
+          .filter(Boolean)
+          .join("\n")
+      ),
+
+      objs: Array(...document.styleSheets)
+    },
+
+    findCSSRule(selector) {
+      return Array(...document.styleSheets)
+        .map((styleSheet) => {
+          try {
+            return [...styleSheet.cssRules].filter((rule) => rule.selectorText === selector)[0];
+          } catch (e) {
+            console.log(
+              "Access to stylesheet %s is denied. Ignoring...",
+              styleSheet.href,
+            );
+          }
+        })
+        .filter(Boolean);
+
+    },
+
+    async importBatch(...cssURLS) {
+      try {
+        const link = document.createElement("link");
+        link.rel = "stylesheet";
+        link.href = cssURLS.join(";");
+        document.head.appendChild(link);
+
+        await new Promise((resolve, reject) => {
+          link.onload = resolve;
+          link.onerror = reject;
+        });
+      } catch (error) {
+        console.error("Error importing CSS batch:", error);
+      }
+    },
+  },
+
+  /** 
+    *  Example:
+    *  // Usage:
+    * 
+    *  // Remember to replace '<URL>' with the actual WebTransport server URL.
+    * 
+    *  const sushaTransport = new SushaTransport('<URL>');
+    * 
+    *  // Connect to the WebTransport server
+    * 
+    *  sushaTransport.connect().catch((error) => {
+    *
+    *    console.error('Failed to connect:', error);
+    *
+    *  });
+    *
+    *  // Send the string "Susha" to the server
+    *
+    *  sushaTransport.sendData('Susha').catch((error) => {
+    *
+    *    console.error('Failed to send data:', error);
+    *
+    *  });
+    */
+  sushaTransport: class SushaTransport {
+    constructor(url) {
+      if ('WebTransport' in window) {
+        this.transport = new WebTransport(url);
+      } else {
+        throw new Error('WebTransport API is not supported in this browser.');
+      }
+    }
+
+    async connect() {
+      await this.transport.ready;
+      console.log('WebTransport connection established!');
+    }
+
+    async sendData(data) {
+      const writableStream = await this.transport.createUnidirectionalStream();
+      const writer = writableStream.getWriter();
+      const encoder = new TextEncoder();
+      const encodedData = encoder.encode(data);
+
+      await writer.write(encodedData);
+      await writer.close();
+      console.log('Data sent over WebTransport.');
+    }
+
+    async writeData(writable) {
+      const writer = writable.getWriter();
+      const data1 = new Uint8Array([65, 66, 67]);
+      const data2 = new Uint8Array([68, 69, 70]);
+      writer.write(data1);
+      writer.write(data2);
+    }
+
+    async readData(readable) {
+      const reader = readable.getReader();
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) {
+          break;
+        }
+        // value is a Uint8Array.
+        console.log(value);
+      }
+    }
+
+    // Improved method to receive data
+    async receiveData() {
+      const reader = this.stream.readable.getReader();
+      const decoder = new TextDecoder();
+
+      try {
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) {
+            reader.releaseLock();
+            break;
+          }
+          console.log(decoder.decode(value));
+        }
+      } catch (error) {
+        console.error('Error while reading data:', error);
+      }
+    }
+
+    // Method to close the WebTransport connection
+    async closeConnection() {
+      await writer.close();
+      await transport.close(); // This will also close the readable stream
+
+      try {
+        await transport.closed;
+        console.log(`The HTTP/3 connection to ${url} closed gracefully.`);
+      } catch (error) {
+        console.error(`The HTTP/3 connection to ${url} closed due to ${error}.`);
+      }
+
+      console.log('WebTransport connection closed.');
+    }
+
+    async receiveUnidirectional() {
+      const reader = transport.incomingUnidirectionalStreams.getReader();
+      try {
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) {
+            reader.releaseLock();
+            return;
+          }
+          const streamReader = value.readable.getReader();
+          try {
+            while (true) {
+              const { value, done } = await streamReader.read();
+              if (done) {
+                break;
+              }
+              // value is a Uint8Array of bytes from the stream
+              console.log(new TextDecoder().decode(value));
+            }
+          } finally {
+            streamReader.releaseLock();
+          }
+        }
+      } finally {
+        reader.releaseLock();
+      }
+    }
+
+    async setUpBidirectional() {
+      try {
+        const { writable, readable } = await transport.createBidirectionalStream();
+
+        // Use the writable and readable streams for sending and receiving data
+        // For example, to write to the writable stream:
+        const writer = writable.getWriter();
+        const encoder = new TextEncoder();
+        const data = encoder.encode('data to send');
+        await writer.write(data);
+        await writer.close();
+
+        // To read from the readable stream:
+        const reader = readable.getReader();
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) {
+            break;
+          }
+          console.log(new TextDecoder().decode(value));
+        }
+
+      } catch (error) {
+        console.error('Error setting up bidirectional stream:', error);
+      }
+    }
+
+    async receiveBidirectional() {
+      const bds = transport.incomingBidirectionalStreams;
+      const reader = bds.getReader();
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) {
+            reader.releaseLock();
+            break;
+          }
+          // value is an instance of WebTransportBidirectionalStream
+          const [readable, writable] = [value.readable, value.writable];
+          await Promise.all([this.readData(readable), this.writeData(writable)]);
+        }
+      } catch (error) {
+        console.error('Error during bidirectional stream handling:', error);
+      }
+    }
+
+  },
+
+  SushaXML: {
+    get xmlRequest() {
+      return class SushaXMLRequest extends XMLHttpRequest {
+        constructor(url, options, cbs = {}) {
+          super(url, options);
+
+          this.cbs = Object.assign(this._evlB, cbs);
+
+          this.url = url;
+          this.options = options;
+
+          for (const event in this.cbs) {
+            this.addEventListener(event, this.cbs[event]);
+          }
+        }
+
+        get handleEvent() {
+          return function(e) {
+            log.textContent = `${log.textContent}${e.type}: ${e.loaded} bytes transferred\n`;
+          }
+        }
+
+        get _evlB() {
+          return {
+            loadstart: this.handleEvent,
+            load: this.handleEvent,
+            loadend: this.handleEvent,
+            progress: this.handleEvent,
+            error: this.handleEvent,
+            abort: this.handleEvent
+          }
+        }
+      }
+    },
+  }
 }
 
 export default windowMethods;

@@ -1,9 +1,9 @@
 let Methods = (cw, class_) => new Object({
 
-  element: cw?.element || cw,
+  element: this?.element || this,
 
-  __LOREM__() { return class_.LOREM },
-  get LOREM() { return cw.__LOREM__() },
+  __LOREM__() { return ElementWrapper.LOREM },
+  get LOREM() { return this.__LOREM__() },
 
   att$(name, value) {
     if (Array.isArray(value)) {
@@ -36,7 +36,7 @@ let Methods = (cw, class_) => new Object({
 
     // has attr ?
     if (!w) {
-      let b = new class_(t);
+      let b = new ElementWrapper(t);
 
       if (t && t instanceof HTMLElement) {
         b._changeElement(t);
@@ -66,12 +66,12 @@ let Methods = (cw, class_) => new Object({
   },
 
   bold$() {
-    return cw.wrap$('b')
+    return this.wrap$('b')
 
   },
 
   italic$() {
-    return cw.wrap$('i')
+    return this.wrap$('i')
 
   },
 
@@ -87,7 +87,7 @@ let Methods = (cw, class_) => new Object({
 
   // Into Link
   link$(href, text) {
-    let wrapped = cw.wrap$('a')
+    let wrapped = this.wrap$('a')
 
     if (wrapped && (href || text)) {
       wrapped.firstChild.att$('href', href)
@@ -121,170 +121,170 @@ let Methods = (cw, class_) => new Object({
 
   // Register a new attribute for a custom data type
   data$(key, value) {
-    cw.att$(`data-${key}`, value);
-    return cw;
+    this.att$(`data-${key}`, value);
+    return this;
   },
 
   // Append a child element
   append$(child) {
-    if (child instanceof class_) {
-      cw.element.appendChild(child.element);
+    if (child instanceof ElementWrapper) {
+      this.element.appendChild(child.element);
     } else if (child instanceof HTMLElement) {
-      cw.element.appendChild(child);
+      this.element.appendChild(child);
     } else if (typeof child === 'string') {
-      cw.element.appendChild(document.createTextNode(child));
+      this.element.appendChild(document.createTextNode(child));
     }
-    return cw;
+    return this;
   },
 
   // Set ID attribute
   id$(id) {
-    cw.att$('id', id);
-    return cw;
+    this.att$('id', id);
+    return this;
   },
 
   // Set classes
   class$(...classes) {
-    cw.element.classList.add(...classes);
-    return cw;
+    this.element.classList.add(...classes);
+    return this;
   },
 
   // Set styles directly on an element
   style$(styleObject) {
     for (const property in styleObject) {
-      cw.element.style[property] = styleObject[property];
+      this.element.style[property] = styleObject[property];
     }
-    return cw;
+    return this;
   },
 
   // Toggle class on an element
   toggleClass$(className) {
-    cw.element.classList.toggle(className);
-    return cw;
+    this.element.classList.toggle(className);
+    return this;
   },
 
   // Set inner HTML
   html$(htmlContent) {
-    cw.element.innerHTML = htmlContent;
-    return cw;
+    this.element.innerHTML = htmlContent;
+    return this;
   },
 
   // Set inner Text
   text$(textContent) {
-    cw.element.textContent = textContent;
-    return cw;
+    this.element.textContent = textContent;
+    return this;
   },
 
-  // Additional methods to be included in the class_ class
+  // Additional methods to be included in the ElementWrapper class
 
   // Set a placeholder attribute for an input element
   placeholder$(placeholderValue) {
-    cw.att$('placeholder', placeholderValue);
-    return cw;
+    this.att$('placeholder', placeholderValue);
+    return this;
   },
 
   // Set the type attribute for an input or button element
   type$(typeValue) {
-    cw.att$('type', typeValue);
-    return cw;
+    this.att$('type', typeValue);
+    return this;
   },
 
   // Add an event listener
   on$(event, handler) {
-    cw.element.addEventListener(event, handler);
-    return cw;
+    this.element.addEventListener(event, handler);
+    return this;
   },
 
   // Remove an event listener
   off$(event, handler) {
-    cw.element.removeEventListener(event, handler);
-    return cw;
+    this.element.removeEventListener(event, handler);
+    return this;
   },
 
   // Perform an action upon pressing the Enter key
   onEnter$(callback) {
-    cw.on$('keydown', (e) => {
+    this.on$('keydown', (e) => {
       if (e.key === 'Enter') callback(e);
     });
-    return cw;
+    return this;
   },
 
   // Focus the element
   focus$() {
-    cw.element.focus();
-    return cw;
+    this.element.focus();
+    return this;
   },
 
   // Blur the element
   blur$() {
-    cw.element.blur();
-    return cw;
+    this.element.blur();
+    return this;
   },
 
   // Add an attribute for accessibility purposes
   aria$(key, value) {
-    cw.att$(`aria-${key}`, value);
-    return cw;
+    this.att$(`aria-${key}`, value);
+    return this;
   },
 
   // Append multiple children at once
   appendChildren$(...children) {
     children.forEach((child) => {
-      cw.append$(child);
+      this.append$(child);
     });
-    return cw;
+    return this;
   },
 
   // Set the disabled attribute on an element
   disabled$(isDisabled) {
     if (isDisabled) {
-      cw.att$('disabled', 'true');
+      this.att$('disabled', 'true');
     } else {
-      cw.element.removeAttribute('disabled');
+      this.element.removeAttribute('disabled');
     }
-    return cw;
+    return this;
   },
 
   // Create and append a new child element
   createElement$(tag, ...children) {
-    cw.append$(new class_(tag, ...children));
-    return cw;
+    this.append$(new ElementWrapper(tag, ...children));
+    return this;
   },
 
   // Fetch and display content - Example: Asynchronous operation to load data
   fetchContent$(url, processContentCallback) {
     fetch(url)
       .then(response => response.json())
-      .then(data => processContentCallback(cw, data))
+      .then(data => processContentCallback(this, data))
       .catch(error => console.error('Error:', error));
-    return cw;
+    return this;
   },
 
   style$(styleObject) {
-    Object.assign(cw.element.style, styleObject);
+    Object.assign(this.element.style, styleObject);
   },
 
   stylesheet$() {
     // Stylesheets are cached in the wrapper
-    if (cw?._stylesheet) {
-      return cw._stylesheet;
+    if (this?._stylesheet) {
+      return this._stylesheet;
     }
 
     // Create a new stylesheet
-    const stylesheet = new class_(document.createElement('style'));
+    const stylesheet = new ElementWrapper(document.createElement('style'));
 
     // Append the stylesheet to the wrapper
-    cw.append$(stylesheet);
+    this.append$(stylesheet);
   },
 
   bounds$() {
-    return cw.element.getBoundingClientRect();
+    return this.element.getBoundingClientRect();
   },
 
   str$() {
     return (
-      cw.element?.outerHTML
-      || cw.element?.innerHTML
+      this.element?.outerHTML
+      || this.element?.innerHTML
     );
   },
 
