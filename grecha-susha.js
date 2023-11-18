@@ -13,6 +13,9 @@ class Grecha {
       static RouterSymbol = Symbol.for("grecha-router");
       static CoreSymbol = Symbol.for("grecha-core");
 
+      get innerHTML() { return this.element.innerHTML; }
+      get outerHTML() { return this.element.outerHTML; }
+
       /* We create attractive class. */
 
       constructor(name, ...children) {
@@ -28,6 +31,10 @@ class Grecha {
         Object.assign(this, methods);
         Object.assign(this.element, methods);
 
+        if (this.element.parentElement) {
+          this._outerHTML_ = () => this.element.outerHTML;
+        }
+
         if (children) for (const child of children) {
           if (typeof child === 'string') {
             this.element.appendChild(document.createTextNode(child));
@@ -42,6 +49,8 @@ class Grecha {
       methods() {
         let cw = this
         return {
+
+          element: this?.element || this,
 
           __LOREM__() { return ElementWrapper.LOREM },
           get LOREM() { return this.__LOREM__() },
@@ -323,8 +332,10 @@ class Grecha {
           },
 
           str$() {
-            return this.element.outerHTML;
-
+            return (
+              this.element?.outerHTML
+              || this.element?.innerHTML
+            );
           },
 
         }
@@ -378,7 +389,7 @@ class Grecha {
       return gr_()
     }
 
-    // @ Tag-init for basic wrapping tags
+    // @ Tag-init for basic wrapping tags [$TI]
     const MUNDANE_TAGS = [
       "canvas",
 
@@ -386,8 +397,30 @@ class Grecha {
       "h2",
       "h3",
 
+      "main",
+      "section",
+      "article",
+      "aside",
+      "footer",
+      "header",
+
       "p",
       "a",
+      "br",
+      "hr",
+      "b",
+      "i",
+      "u",
+      "s",
+      "sub",
+      "sup",
+      "mark",
+      "small",
+      "big",
+
+      "ul",
+      "ol",
+      "li",
 
       "div",
       "span",
@@ -451,7 +484,7 @@ class Grecha {
             current: null,
             history: [],
             stack: [],
-          } 
+          }
         }
 
         // @ CREDIT (FORK): juniorrantila
@@ -677,15 +710,62 @@ class Grecha {
 
       depadString,
 
+      nodesToString(...nodes) {
+        return nodes.map(n => n.outerHTML).join("");
+      },
+
       createDocument(...args) {
         return new DOMParser()
-          .parseFromString(args, "text/html")
+          .parseFromString(
+            nodesToString(args), 
+            "text/html"
+          )
       },
 
       SushaTemplates: {
         get document() {
           return createDocument(
+            html(
+              head(),
 
+              body(
+                main(
+                  article(
+                    section(
+
+                      h1('Hello World!')
+                        .att$('class', 'title')
+                      ,
+
+                      small('From Susha.')
+                        .att$('class', 'subtitle')
+                      ,
+
+                      hr(),
+                      br(),
+
+                      p('This is a template.')
+                        .att$('class', 'content')
+                      ,
+
+                      p('It is <strong>very</strong> <em>simple</em>.')
+                        .att$('class', 'content')
+                      ,
+
+                      p('Susha allows you to create templates much like React.')
+                        .att$('class', 'content')
+                      ,
+
+                      p('(But is waaaay better!!)')
+                        .att$('class', 'content')
+                    )
+                  )
+                    .att$('class', 'main')
+                )
+
+              ) // @BODY
+
+            ) // @HTML
           )
         },
       }
