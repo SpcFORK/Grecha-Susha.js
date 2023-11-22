@@ -123,7 +123,7 @@
 
   } else {
     window.__Grecha__ = Grecha;
-    new Grecha(window);
+    window.__Susha__ = new Grecha(window);
 
     addEventListener('DOMContentLoaded', window?.GrechaLoaded?.())
   }

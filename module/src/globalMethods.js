@@ -4,6 +4,8 @@ import ElementWrapper from './elementWrapper.js';
 
 const windowMethods = {
 
+  SushaWrapper: ElementWrapper,
+
   tag,
 
   htmlDoc(...nodes) {
