@@ -12,6 +12,18 @@ const windowMethods = {
     return tag('', ...nodes);
   },
 
+  Serializer: class {
+    constructor(doc) {
+      !doc && (doc = document);
+      this.doc = doc;
+    }
+
+    serialize(node) {
+      const serializer = new XMLSerializer();
+      return serializer.serializeToString(node);
+    }
+  },
+
   // @ Basic
   img(src, alt) {
     // return new ElementWrapper("img").att$("src", src).get$();
@@ -1187,6 +1199,22 @@ const windowMethods = {
       return await Promise.all(this.xmls);
     }
   },
+
+  SushaMath: {
+    sineWave(iterations, increaseFactor) {
+      var counter = 0;
+      var increase = Math.PI * 2 / increaseFactor;
+
+      for (var i = 0; i <= 1; i += 1 / iterations) {
+        var x = i;
+        var y = Math.sin(counter) / 2 + 0.5;
+        counter += increase;
+        // Do something with x and y, like plotting the wave or storing the coordinates.
+      }
+    }
+
+
+  }
 }
 
 export default windowMethods;

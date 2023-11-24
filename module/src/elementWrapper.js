@@ -10,6 +10,7 @@ class ElementWrapper {
 
   static RouterSymbol = Symbol.for("grecha-router");
   static CoreSymbol = Symbol.for("grecha-core");
+  static modulesSymbol = Symbol.for("grecha-modules");
 
   /* We create attractive class. */
 

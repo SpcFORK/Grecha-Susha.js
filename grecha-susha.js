@@ -462,6 +462,18 @@ class Grecha {
         return tag('', ...nodes);
       },
 
+      Serializer: class {
+        constructor(doc) {
+          !doc && (doc = document);
+          this.doc = doc;
+        }
+
+        serialize(node) {
+          const serializer = new XMLSerializer();
+          return serializer.serializeToString(node);
+        }
+      },
+
       // @ Basic
       img(src, alt) {
         // return new ElementWrapper("img").att$("src", src).get$();
@@ -1637,7 +1649,24 @@ class Grecha {
           return await Promise.all(this.xmls);
         }
       },
+
+      SushaMath: {
+        sineWave(iterations, increaseFactor) {
+          var counter = 0;
+          var increase = Math.PI * 2 / increaseFactor;
+
+          for (var i = 0; i <= 1; i += 1 / iterations) {
+            var x = i;
+            var y = Math.sin(counter) / 2 + 0.5;
+            counter += increase;
+            // Do something with x and y, like plotting the wave or storing the coordinates.
+          }
+        }
+
+
+      }
     }
+    
     // ---
 
     // @ Class Exports
@@ -1685,13 +1714,13 @@ class Grecha {
           // Append Metas
           metas.forEach(meta => {
             function create_meta(meta) {
-              console.error(`[META ERROR] Meta ${meta} doesn't exist, creating...`);
+              console.error(`[META ERROR] Meta ${meta.str$()} doesn't exist, creating...`);
               document.head.appendChild(meta.get$());
             }
 
             if (headMetas.length < 1) {
               create_meta(meta);
-            
+
             } else {
               headMetas.forEach(meta_ => {
                 if (meta.getAttribute('name') == meta_.getAttribute('name')) {
