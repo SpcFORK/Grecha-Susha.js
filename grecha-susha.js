@@ -1648,25 +1648,61 @@ class Grecha {
     function windowOptimizer() {
       /* A function to check for mistakes made by devs, and fix them (The logging said errors) */
 
+      // Head?
+      if (!document.head) {
+        console.error('[GS Optimizer] Head not found, Creating...');
+        document.head = document.createElement('head');
+        document.documentElement.appendChild(document.head);
+      }
+
       // @ MetaCheck
       let headMetas = document.head.querySelectorAll('meta');
+
+      // Create basic Metas
+      let metas = [
+        tag('meta').att$('charset', 'utf-8'),
+        tag('meta').att$('name', 'viewport').att$('content', 'width=device-width, initial-scale=1.0'),
+        tag('meta').att$('name', 'description').att$('content', 'A Grecha-Susha website.'),
+        tag('meta').att$('name', 'theme-color').att$('content', '#ff0000'),
+        tag('meta').att$('name', 'og:title').att$('content', 'Grecha-Susha'),
+        tag('meta').att$('name', 'og:description').att$('content', 'A Grecha-Susha website.'),
+        tag('meta').att$('name', 'og:image').att$('content', 'https://grecha-susha.github.io/assets/images/logo.png'),
+        tag('meta').att$('name', 'og:url').att$('content', 'https://grecha-susha.github.io/'),
+      ]
 
       if (headMetas.length < 0) {
         console.error('[META ERROR] Metas not found.');
 
-        // Create basic Metas
-        let metas = [
-          tag('meta').att$('charset', 'utf-8'),
-          tag('meta').att$('name', 'viewport').att$('content', 'width=device-width, initial-scale=1.0'),
-          tag('meta').att$('name', 'description').att$('content', 'A Grecha-Susha website.'),
-          tag('meta').att$('name', 'theme-color').att$('content', '#ff0000'),
-          tag('meta').att$('name', 'og:title').att$('content', 'Grecha-Susha'),
-          tag('meta').att$('name', 'og:description').att$('content', 'A Grecha-Susha website.'),
-          tag('meta').att$('name', 'og:image').att$('content', 'https://grecha-susha.github.io/assets/images/logo.png'),
-          tag('meta').att$('name', 'og:url').att$('content', 'https://grecha-susha.github.io/'),
-        ]
+        // Append Metas
+        headMetas.forEach(meta => document.head.appendChild(meta));
 
         return;
+      } else {
+
+        if (headMetas.length < metas.length) {
+          console.error('[META ERROR] Metas don\'t meet standards, creating ones not found.');
+
+          // Append Metas
+          metas.forEach(meta => {
+            function create_meta(meta) {
+              console.error(`[META ERROR] Meta ${meta} doesn't exist, creating...`);
+              document.head.appendChild(meta.get$());
+            }
+
+            if (headMetas.length < 1) {
+              create_meta(meta);
+            
+            } else {
+              headMetas.forEach(meta_ => {
+                if (meta.getAttribute('name') == meta_.getAttribute('name')) {
+                  create_meta(meta);
+                }
+              })
+            }
+
+          });
+        }
+
       }
 
     }
