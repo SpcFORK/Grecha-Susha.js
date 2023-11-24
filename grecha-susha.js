@@ -12,6 +12,7 @@ class Grecha {
 
       static RouterSymbol = Symbol.for("grecha-router");
       static CoreSymbol = Symbol.for("grecha-core");
+      static modulesSymbol = Symbol.for("grecha-modules");
 
       get innerHTML() { return this.element.innerHTML; }
       get outerHTML() { return this.element.outerHTML; }
@@ -428,7 +429,7 @@ class Grecha {
       "address",
       "cite",
       "dfn",
-      "img",
+      // "img",
       "map",
       "area",
       "wbr",
@@ -462,9 +463,11 @@ class Grecha {
       },
 
       // @ Basic
-      img(src) {
+      img(src, alt) {
         // return new ElementWrapper("img").att$("src", src).get$();
-        return tag("img").att$("src", src)
+        return tag("img")
+          .att$("src", src)
+          .att$("alt", alt || src)
       },
 
       input(type) {
@@ -765,7 +768,9 @@ class Grecha {
       SushaTemplates: {
         get ExampleDocument() {
           return html(
-            head(),
+            head(
+              tag('title', 'Example Document'),
+            ),
 
             body(
               main(
@@ -806,6 +811,102 @@ class Grecha {
 
           ) // @HTML
         },
+      },
+
+      typing: {
+        TypedObject: class TypedObject {
+          constructor(obj) {
+            if (!obj) obj = {};
+
+            TypedObject.typeEntries(this, obj);
+
+            return this
+          }
+
+          static typeEntries(th, obj) {
+            Object.entries(obj).forEach(([key, value]) => {
+              th[key] = typeof value;
+            });
+          }
+
+          static set(th, data) {
+            return Object.assign(th, data)
+          }
+        },
+
+        TypeProxy: class TypeProxy {
+          static collection = [];
+          static holderSymbol = Symbol.for('meta');
+          static coreSymbol = Symbol.for('core');
+
+          static add(data) {
+            TypeProxy.collection.push(data);
+
+            if (this[TypeProxy.holderSymbol].length < 1) {
+              this[TypeProxy.holderSymbol] = [data];
+            } else {
+              this[TypeProxy.holderSymbol].push(data);
+            }
+          }
+
+          // An Object which, once defined, keeps values strictly that type.
+          constructor(obj) {
+            if (!obj) obj = {};
+
+            this[TypeProxy.coreSymbol] = {};
+
+            this._OBJECT_ = {
+              [TypeProxy.coreSymbol]: createTypedObject('TypedStorage', {
+                check: (value) => {
+                  return typeof value === this[TypeProxy.coreSymbol];
+                },
+                get: (key) => {
+                  return this[TypeProxy.coreSymbol][key];
+                },
+                set: (key, value) => {
+                  // Check Types
+                  if (this[TypeProxy.coreSymbol][key] && typeof this[TypeProxy.coreSymbol][key] !== typeof value) {
+                    throw new TypeError(`Expected type ${typeof value} for key ${key} but got ${typeof this[TypeProxy.coreSymbol][key]}`);
+                  }
+
+                  return this[TypeProxy.coreSymbol][key] = value;
+                },
+              }),
+            };
+
+            let o__ = this._OBJECT_.typed = new this._OBJECT_[TypeProxy.coreSymbol](obj);
+
+            return new Proxy(this._OBJECT_.typed, {
+              get: (target, key) => {
+                if (o__.check(key)) {
+                  return o__.get(key);
+                } else {
+                  return target[key];
+                }
+              },
+              set: (target, key, value) => {
+                if (o__.check(key)) {
+                  o__.set(key, value);
+                } else {
+                  throw new TypeError(`Expected type ${typeof value} for key ${key} but got ${typeof o__.get(key)}`);
+                }
+              },
+            });
+          }
+        },
+
+        createTypedObject(name = '', methods) {
+          let _t = {
+            [name]: class extends TypedObject {
+              constructor(obj) {
+                super(obj);
+                TypedObject.set(this, methods);
+              }
+            }
+          }
+
+          return _t[name]
+        }
       },
 
       SushaServiceBuilder: {
@@ -1104,53 +1205,63 @@ class Grecha {
       },
 
       DCSS: {
-        allCSS: {
-          txt: (
+        getAllCSS() {
+          return (
             [...document.styleSheets]
               .map((styleSheet) => {
                 try {
-                  return [...styleSheet.cssRules].map((rule) => rule.cssText).join("");
+                  return [...styleSheet.cssRules]
+                    .map((rule) => rule.cssText)
+                    .join("");
                 } catch (e) {
                   console.log(
                     "Access to stylesheet %s is denied. Ignoring…",
-                    styleSheet.href,
+                    styleSheet.href
                   );
                 }
               })
               .filter(Boolean)
               .join("\n")
-          ),
+          );
+        },
 
-          objs: Array(...document.styleSheets)
+        getCSSObjects() {
+          return [...document.styleSheets];
         },
 
         findCSSRule(selector) {
-          return Array(...document.styleSheets)
-            .map((styleSheet) => {
-              try {
-                return [...styleSheet.cssRules].filter((rule) => rule.selectorText === selector)[0];
-              } catch (e) {
-                console.log(
-                  "Access to stylesheet %s is denied. Ignoring...",
-                  styleSheet.href,
-                );
-              }
-            })
-            .filter(Boolean);
-
+          return (
+            [...document.styleSheets]
+              .map((styleSheet) => {
+                try {
+                  return [...styleSheet.cssRules].find(
+                    (rule) => rule.selectorText === selector
+                  );
+                } catch (e) {
+                  console.log(
+                    "Access to stylesheet %s is denied. Ignoring...",
+                    styleSheet.href
+                  );
+                }
+              })
+              .filter(Boolean)
+          );
         },
 
-        async importBatch(...cssURLS) {
-          try {
+        async importBatch(...cssURLs) {
+          const links = cssURLs.map((url) => {
             const link = document.createElement("link");
             link.rel = "stylesheet";
-            link.href = cssURLS.join(";");
+            link.href = url;
             document.head.appendChild(link);
-
-            await new Promise((resolve, reject) => {
+            return new Promise((resolve, reject) => {
               link.onload = resolve;
               link.onerror = reject;
             });
+          });
+
+          try {
+            await Promise.all(links);
           } catch (error) {
             console.error("Error importing CSS batch:", error);
           }
@@ -1158,6 +1269,32 @@ class Grecha {
       },
 
       /** 
+        * The code defines a class called SushaTransport that is intended to manage WebTransport connections. WebTransport is a protocol that allows browsers to send and receive data over HTTP/3.
+       
+        Here's a breakdown of each part:
+        
+        constructor(url): This is the constructor method that creates an instance of SushaTransport. It takes a URL as an argument. It then checks if the browser supports WebTransport. If not, it throws an error.
+        
+        async connect(): This method establishes the WebTransport connection. It waits until the transport is ready before logging that the connection is established.
+        
+        async sendData(data): This method allows sending text data over a unidirectional stream (one-way communication). It encodes the text data and writes it to a stream.
+        
+        async writeData(writable): This method writes predefined Uint8Array data to the provided writable stream.
+        
+        async readData(readable): This method reads data from the provided readable stream, logs the data to the console, and stops when there's no more data.
+        
+        async receiveData(): This is an improved method to receive data from a readable stream attached to this.stream. It decodes the received bytes to text and logs them to the console.
+        
+        async closeConnection(): This method closes the WebTransport connection, handles the closure of the transport, and logs whether the transport closed gracefully or due to an error.
+        
+        async receiveUnidirectional(): This method listens for incoming unidirectional streams from the server and logs the received data after decoding it from bytes to text.
+        
+        async setUpBidirectional(): This method sets up a bidirectional stream (two-way communication) and demonstrates how to send and receive data through it.
+        
+        async receiveBidirectional(): This method handles incoming bidirectional streams. For each bidirectional stream, it starts reading and writing data in parallel until there are no more streams.
+        
+        This code would be used in a web application where there's a need to send and receive data in real-time with low latency, such as in gaming or live streaming apps. The class simplifies managing the complex WebTransport API by providing methods for common tasks like connecting, sending, and receiving data.
+        *
         *  Example:
         *  // Usage:
         * 
@@ -1337,6 +1474,28 @@ class Grecha {
 
       },
 
+      /** This code is defining a property called xmlRequest inside an object named SushaXML. The property is a getter function that returns a class definition when it's accessed. Let's break down the complex parts into simpler language.
+       
+      Class Definition: The code is defining a new class called SushaXMLRequest which extends from XMLHttpRequest. In simple terms, the SushaXMLRequest class has all the capabilities of XMLHttpRequest with some added functionalities. XMLHttpRequest is a built-in browser object that allows you to make network requests to retrieve data from a server, commonly used for AJAX calls.
+       
+      Constructor: The constructor is a special method for creating and initializing an object created with a class. In this case, SushaXMLRequest's constructor accepts url, options, and a set of callbacks (cbs) but with a default empty object {} if no callbacks are provided.
+       
+      Super Call: The super(url, options); line is calling the constructor of the parent class XMLHttpRequest with the url and options provided. This is necessary to ensure that the object is properly set up as an XMLHttpRequest.
+       
+      Callbacks Assignment: this.cbs is assigned the result of merging a _evlB object (explained later) with the provided callbacks. Object.assign is used to merge these objects together. This sets up a series of event listeners based on the callbacks provided.
+       
+      Event Listeners: addEventListener is used in a loop over all the keys of this.cbs to automatically subscribe to the events with the corresponding methods defined in cbs.
+       
+      Getter Method: get handleEvent() is a getter that returns a function. The function logged to log.textContent the type of the event that occurred and the number of bytes transferred during that event.
+       
+      _evlB Property: _evlB is a getter that returns an object with keys corresponding to various event types like loadstart, load, loadend, progress, error, and abort. Each key is associated with this.handleEvent which implies each event is handled by the handleEvent function returned by the getter get handleEvent().
+       
+      Here's the overall functionality in simpler terms:
+       
+      When SushaXML.xmlRequest is accessed, it provides you with a special class for sending network requests (SushaXMLRequest).
+      You can create an instance of SushaXMLRequest with a specified URL, optional settings (options), and various event callbacks.
+      It automatically sets up listeners for several types of events and logs information to the log element whenever these events trigger.
+      It inherits from XMLHttpRequest, meaning it has all the features to send network requests but adds its own custom behavior for event handling. */
       SushaXML: {
         get xmlRequest() {
           return class SushaXMLRequest extends XMLHttpRequest {
@@ -1372,6 +1531,112 @@ class Grecha {
           }
         },
       },
+
+      SushaImporter: class SushaImporter {
+        constructor(...urls) {
+          this.urls = urls;
+          this.xmls = [];
+        }
+
+        start(cb) {
+          if (!cb) {
+            if (window[Symbol.for('GSImporter')]) {
+              cb = window[Symbol.for('GSImporter')].start
+            } else {
+              cb = () => { }
+            }
+          }
+
+          this.urls.forEach(url => {
+            let req = new SushaXML.xmlRequest(url);
+            req.onload = (...e) => {
+              this.xmls.push(req.responseXML);
+              cb(url, ...e);
+
+              // Use
+              handleImport(url, ...e);
+            }
+            req.send();
+          });
+
+          function handleImport(url, ...e) {
+            if (`${url}`.endsWith('.js')) {
+              let script = document.createElement('script');
+              script.src = url;
+              document.head.appendChild(script);
+
+            }
+
+            else if (`${url}`.endsWith('.css')) {
+              let link = document.createElement('link');
+              link.rel = 'stylesheet';
+              link.href = url;
+              document.head.appendChild(link);
+            }
+
+            else if (`${url}`.endsWith('.json')) {
+              fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                  window[Symbol.for('ImportedData')] = [
+                    ...(
+                      window[Symbol.for('ImportedData')]
+                        ? window[Symbol.for('ImportedData')]
+                        : []
+                    ),
+                    data
+                  ];
+                })
+            }
+
+            else if (`${url}`.endsWith('.html')) {
+              fetch(url)
+                .then(response => response.text())
+                .then(data => {
+                  window[Symbol.for('ImportedHTML')] = [
+                    ...(
+                      window[Symbol.for('ImportedHTML')]
+                        ? window[Symbol.for('ImportedHTML')]
+                        : []
+
+                    ),
+                    data
+                  ]
+                })
+            }
+
+            else if (`${url}`.endsWith('.png')) {
+              fetch(url)
+                .then(response => response.blob())
+                .then(blob => {
+                  let img = new Image();
+                  img.src = URL.createObjectURL(blob);
+                  img.onload = () => {
+                    window[Symbol.for('ImportedImages')] = [
+                      ...(
+                        window[Symbol.for('ImportedImages')]
+                          ? window[Symbol.for('ImportedImages')]
+                          : []
+
+                      ),
+                      img
+                    ]
+                  }
+                })
+            }
+          }
+
+          return this;
+        }
+
+        get xml() {
+          return this.xmls;
+        }
+
+        async awaitAll() {
+          return await Promise.all(this.xmls);
+        }
+      },
     }
     // ---
 
@@ -1379,6 +1644,34 @@ class Grecha {
     if (typeof module == 'undefined') {
       Object.assign(window, windowMethods);
     }
+
+    function windowOptimizer() {
+      /* A function to check for mistakes made by devs, and fix them (The logging said errors) */
+
+      // @ MetaCheck
+      let headMetas = document.head.querySelectorAll('meta');
+
+      if (headMetas.length < 0) {
+        console.error('[META ERROR] Metas not found.');
+
+        // Create basic Metas
+        let metas = [
+          tag('meta').att$('charset', 'utf-8'),
+          tag('meta').att$('name', 'viewport').att$('content', 'width=device-width, initial-scale=1.0'),
+          tag('meta').att$('name', 'description').att$('content', 'A Grecha-Susha website.'),
+          tag('meta').att$('name', 'theme-color').att$('content', '#ff0000'),
+          tag('meta').att$('name', 'og:title').att$('content', 'Grecha-Susha'),
+          tag('meta').att$('name', 'og:description').att$('content', 'A Grecha-Susha website.'),
+          tag('meta').att$('name', 'og:image').att$('content', 'https://grecha-susha.github.io/assets/images/logo.png'),
+          tag('meta').att$('name', 'og:url').att$('content', 'https://grecha-susha.github.io/'),
+        ]
+
+        return;
+      }
+
+    }
+
+    windowOptimizer();
 
   }
 }
