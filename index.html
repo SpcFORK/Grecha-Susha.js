@@ -12,7 +12,15 @@
 
   <script type="module">
 
-    const kasha = img("SushaLogo.png");
+    const kasha = img("SushaLogo.favicon.png")
+      .att$("width", 32 * 4 + 'px')
+      .att$("height", 32 * 4 + 'px')
+      .style$({
+        "position": "absolute",
+        // Disable Bi-linear interpolation
+        "image-rendering": "pixelated",
+      })
+
     const kashaHard = img("KashaHard.gif");
 
     const r = router({
