@@ -505,9 +505,9 @@ class Grecha {
             if (!hasProtocol) {
               url_ = origin + '/' + href;
             }
-            
+
             let resURL = new URL(url_);
-            
+
             // If starts with '#/', return because is Router route
             if (resURL.hash.startsWith('#/') || (href.startsWith('#'))) {
               continue a;
@@ -658,7 +658,7 @@ class Grecha {
         }
       })
     }
-    
+
     // @ Tagware, @wm
     const windowMethods = {
 
@@ -877,6 +877,60 @@ class Grecha {
           // // Before the page unloads, save the current state
           // window.addEventListener('beforeunload', () => env.saveState());
         }
+      },
+
+      Shout: {
+        total: {},
+
+        createShout(name = '', cb = function() { }) {
+          let count = 0;
+          let keystore = 0;
+          Shout.total[name] = {
+            count
+          }
+
+          Object.defineProperty(window, name, {
+            get: function() {
+              count++
+              if (Shout.total?.[name]) {
+                Object.assign(Shout.total[name], { count })
+              }
+              return cb(count)
+            },
+
+            set: function(value) {
+              // Put into Shout.total
+              Object.assign(Shout.total[name], {
+                [typeof value  == 'string' ? value : (value.name || keystore+`_${typeof value}`)]: value
+              })
+              keystore++
+            },
+
+            enumerable: true,
+            configurable: true
+          });
+
+        },
+
+        destroyShout(name) {
+
+          if (!this.total.includes(name)) {
+            throw new Error(`Shout ${name} not found`);
+          }
+
+          delete window[name];
+          this.total = this.total.filter(n => n !== name);
+
+        },
+
+        isShout(name) {
+          if (!this.total.includes(name) || window[name][Symbol.for('shout')].is === false) {
+            return false;
+          }
+
+          return true;
+        },
+
       },
 
       // @ Basic
