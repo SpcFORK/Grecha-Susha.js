@@ -599,7 +599,9 @@ class Grecha {
             value: element.getAttribute(entryName)
           }
 
-          if (!Grecha.preloaded.includes(struct)) {
+          // If prop value is never found in __Grecha__.preloaded, add it
+          let result = Grecha.preloaded.find((e) => e.value == struct.value);
+          if (!result) {
             Grecha.preloaded.push(struct);
           }
         }
@@ -664,7 +666,9 @@ class Grecha {
 
           }
 
-          if (!Grecha.preloaded.includes(struct)) {
+          // If prop value is never found in __Grecha__.preloaded, add it
+          let result = Grecha.preloaded.find((e) => e.value == struct.value)
+          if (!result) {
             Grecha.preloaded.push(struct);
           }
         }
