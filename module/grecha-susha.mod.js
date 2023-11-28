@@ -140,7 +140,8 @@ class Grecha {
 
             } else {
               headMetas.forEach(meta_ => {
-                if (meta.getAttribute('name') == meta_.getAttribute('name')) {
+                meta?.element && (meta = meta.get$())
+                if (meta.getAttribute?.('name') == meta_.getAttribute?.('name')) {
                   create_meta(meta);
                 }
               })
@@ -240,29 +241,96 @@ class Grecha {
 
             if (!hasProtocol) {
               url_ = origin + '/' + href;
-              url_ = new URL(url_);
             }
+
+            url_ = new URL(url_);
 
             // If starts with '#/', return because is Router route
             if (url_.hash.startsWith('#/')) {
               continue a;
             }
 
-            else element.addEventListener('click', async (e) => {
-              e.preventDefault();
-              let data = Grecha.loaded[href];
-              // Write HTML to DOM
-              if (data) {
-                document.write(data);
-              }
+            else {
+              element.addEventListener('click', async (e) => {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                let data = Grecha.loaded[href];
+                // Write HTML to DOM
+                let html = data;
 
-              else {
-                // Load Loading HTML template.
-                HTMLRoot.innerHTML = SushaTemplates.loadinglinks.innerHTML;
-                let html = await fetch(href).then(res => res.text());
-                document.write(html);
-              }
-            })
+                if (!html) {
+                  // Load Loading HTML template.
+                  HTMLRoot.innerHTML = SushaTemplates.loadinglinks.innerHTML;
+                  html = await fetch(href).then(res => res.text());
+                }
+
+                // Replace 'href="./..."' && 'href="../..."' with 'href="<url>/..."'
+                html = html.replace(/(href|src|url)="(?:\.\/)?(.*?)"/g, (match, p1, p2) => {
+                  if (p2.startsWith('../')) {
+                    // Replace all occurrences of ../ with the next parent path
+                    let parentCount = (p2.match(/\.\.\//g) || []).length;
+                    let urlArrayCopy = urlArray.slice(0, urlArray.length - parentCount);
+                    p2 = p2.replace(/^(\.\.\/)/, origin + '/');
+                    p2 = p2.replace(/\.\.\//g, '');
+                    let innards = urlArrayCopy.join('/');
+                    return `${p1}="${innards ? innards + '/' : ''}${p2}"`;
+                  }
+                  return `${p1}="${origin}/${href}/${p2}"`;
+                });
+
+                // html = html.replace(/(href|src|url)="\.\.\/(.*?)"/g, (match, p1, p2) => {
+                //   console.log(p2)
+                //   return `${p1}="${href}/${urlArray.slice(0, urlArray.length - 1).join('/')}/${p2}"`;
+                // });
+
+                if (html) document.write(html);
+
+                // Scroll to top
+                window.scrollTo(0, 0);
+                // Set URL to HREF without reloading page
+
+                // Get every Script
+                let scripts = document.querySelectorAll('script');
+                for (let k = 0; k < scripts.length; k++) {
+                  let script = scripts[k];
+                  let src = script.getAttribute('src');
+
+                  if (src) {
+                    let res = await fetch(src);
+                    let text = await res.text();
+
+                    // Remove Script && append new Script
+                    let reScript = document.createElement('script');
+
+                    for (let l = 0; l < script.attributes.length; l++) {
+                      let attr = script.attributes[l];
+                      reScript.setAttribute(attr.name, attr.value);
+                    }
+
+                    script.remove();
+                    reScript.innerHTML = text;
+                    document.body.appendChild(reScript);
+                  }
+
+                  else if (script.text) {
+                    // Append new Script
+                    let reScript = document.createElement('script');
+
+                    for (let l = 0; l < script.attributes.length; l++) {
+                      let attr = script.attributes[l];
+                      reScript.setAttribute(attr.name, attr.value);
+                    }
+
+                    document.body.appendChild(reScript);
+                  }
+                }
+
+                // Send fake DOM load event
+                let fakeEvent = new Event('DOMContentLoaded');
+                window.dispatchEvent(fakeEvent);
+
+              });
+            }
           }
 
           Grecha.preloaded.push({
@@ -304,7 +372,7 @@ class Grecha {
           if (groupsOfPathPeriods.length > 1) {
             let fileExtention = groupsOfPathPeriods[groupsOfPathPeriods.length - 1];
 
-            switch (element.attribute) {
+            switch (fileExtention) {
               case 'html':
                 break;
               default: return
@@ -314,6 +382,10 @@ class Grecha {
           // If starts with '#/', return because is Router route
           if (url_.hash.startsWith('#/')) {
             return;
+          }
+
+          else if (url_.pathname.startsWith('/data:')) {
+            return
           }
 
           // Fetch Element
@@ -335,8 +407,8 @@ class Grecha {
 // @ Module Exports
 if (globalThis?.window) {
 
-  window.Grecha = Grecha;
-  window.Susha = new Grecha(window)
+  !window.Grecha && (window.Grecha = Grecha)
+  !window.Susha && (window.Susha = new Grecha(window))
 
 } else {
 

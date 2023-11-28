@@ -1808,17 +1808,19 @@ const windowMethods = {
 
       return canvas;
     }
+    let thisExists = customElements.get('spc-icon')
 
-    window.customElements.define(
-      'spc-icon',
-      class extends HTMLElement {
-        constructor() {
-          super();
-          this.attachShadow({ mode: 'open' });
-          this.load = this.load.bind(this);
-          this.proc = this.proc.bind(this);
+    if (!thisExists) {
+      window.customElements.define(
+        'spc-icon',
+        class extends HTMLElement {
+          constructor() {
+            super();
+            this.attachShadow({ mode: 'open' });
+            this.load = this.load.bind(this);
+            this.proc = this.proc.bind(this);
 
-          this.shadowRoot.innerHTML = `
+            this.shadowRoot.innerHTML = `
             <style>
               :host {
                 display: inline-block;
@@ -1838,51 +1840,51 @@ const windowMethods = {
           `;
 
 
-          // On element load, load();
-          window.addEventListener('DOMContentLoaded', () => {
-            this.load(this.shadowRoot.host);
-          });
-        }
+            // On element load, load();
+            window.addEventListener('DOMContentLoaded', () => {
+              this.load(this.shadowRoot.host);
+            });
+          }
 
-        load(element) {
+          load(element) {
 
-          if (this.hasAttribute('src')) {
-            this.src = this.getAttribute('src') || '';
+            if (this.hasAttribute('src')) {
+              this.src = this.getAttribute('src') || '';
 
-            // Fetch the CICO from the URL
-            // -> if ends with cico
+              // Fetch the CICO from the URL
+              // -> if ends with cico
 
-            if (this.src.endsWith('.cico')) {
-              fetch(this.src)
-                .then((response) => response.text())
-                .then((data) => {
-                  this.shadowRoot.innerHTML = `
+              if (this.src.endsWith('.cico')) {
+                fetch(this.src)
+                  .then((response) => response.text())
+                  .then((data) => {
+                    this.shadowRoot.innerHTML = `
                     <slot></slot>
                   `.trim();
-                  this.can = this.appendChild(drawPixelArt(data))
-                  this.proc(this.can);
-                  return
-                });
-              return
-            }
+                    this.can = this.appendChild(drawPixelArt(data))
+                    this.proc(this.can);
+                    return
+                  });
+                return
+              }
 
-            else {
-              throw new Error(
-                `
+              else {
+                throw new Error(
+                  `
     Invalid .cico URL: ${this.src} !!!
     Pleace add a .cico extension to the URL!!
 
     tank yu!
     `.trim()
-              );
+                );
+              }
             }
-          }
 
-          this.can = this.appendChild(
-            drawPixelArt(
-              this.getAttribute('art') ||
-              this.innerHTML ||
-              `
+            this.can = this.appendChild(
+              drawPixelArt(
+                this.getAttribute('art') ||
+                this.innerHTML ||
+                `
     000
     0 0
       0 
@@ -1891,55 +1893,57 @@ const windowMethods = {
 
      0 
     `.trim()
+              )
             )
-          )
 
-          this.proc(this.can)
-        }
-
-        proc(can) {
-
-          // can.style.width = `${this.shadowRoot.host.offsetWidth}px`;
-          // can.style.height = `${this.shadowRoot.host.offsetHeight}px`;
-
-          can.style.width = `${can.width}px`;
-          can.style.height = `${can.height}px`;
-          can.style.display = 'block';
-
-          // Set class icon to canvas
-          can.classList.add('icon');
-
-          setInterval(() => {
-            // requestAnimationFrame so we can make API
-            requestAnimationFrame(() => {
-              this?.update?.(this.can)
-
-              if (this.src) {
-                this.can.src = this.src;
-
-                let ref_ = Reflect.get(window, this.src)
-
-                if (ref_) {
-                  // Call update if exists
-                  ref_
-                    ?.update
-                    ?.(this)
-                }
-              }
-            })
-
-          }, 1000 / 60);
-        }
-
-        redraw(input) {
-          if (!(this.can instanceof HTMLCanvasElement)) {
-            return
+            this.proc(this.can)
           }
 
-          this.can.replaceWith(drawPixelArt(input, 10, this.can))
+          proc(can) {
+
+            // can.style.width = `${this.shadowRoot.host.offsetWidth}px`;
+            // can.style.height = `${this.shadowRoot.host.offsetHeight}px`;
+
+            can.style.width = `${can.width}px`;
+            can.style.height = `${can.height}px`;
+            can.style.display = 'block';
+
+            // Set class icon to canvas
+            can.classList.add('icon');
+
+            setInterval(() => {
+              // requestAnimationFrame so we can make API
+              requestAnimationFrame(() => {
+                this?.update?.(this.can)
+
+                if (this.src) {
+                  this.can.src = this.src;
+
+                  let ref_ = Reflect.get(window, this.src)
+
+                  if (ref_) {
+                    // Call update if exists
+                    ref_
+                      ?.update
+                      ?.(this)
+                  }
+                }
+              })
+
+            }, 1000 / 60);
+          }
+
+          redraw(input) {
+            if (!(this.can instanceof HTMLCanvasElement)) {
+              return
+            }
+
+            this.can.replaceWith(drawPixelArt(input, 10, this.can))
+          }
         }
-      }
-    )
+      )
+
+    }
 
     return {
       drawPixelArt,

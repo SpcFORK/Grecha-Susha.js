@@ -1,4 +1,4 @@
-let Methods = (cw, class_) => new Object({
+let Methods = (cw, ElementWrapper) => new Object({
 
   element: this?.element || this,
 

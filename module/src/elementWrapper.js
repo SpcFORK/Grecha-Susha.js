@@ -17,12 +17,12 @@ class ElementWrapper {
   constructor(name, ...children) {
     if (typeof name === "string") {
       this.element = document.createElement(name);
-
     } else {
       this.element = name;
     }
 
     let methods = this._m = this.methods();
+    methods.element = this.element
 
     Object.assign(this, methods);
     Object.assign(this.element, methods);
