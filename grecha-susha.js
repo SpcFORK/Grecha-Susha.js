@@ -390,6 +390,27 @@ class Grecha {
       return gr_()
     }
 
+    function segPosCenter(pos, divs, width, ind) {
+      return (pos / divs) * ind + (width / 2);
+    }
+
+    function When(conditionFunction, actionFunction) {
+      return new Promise((resolve, reject) => {
+        if (typeof conditionFunction !== 'function') {
+          reject(new Error('Arg 1; MUST BE FUNCTION!!!'));
+          return
+        }
+
+        const interval = setInterval(() => {
+          if (conditionFunction()) {
+            clearInterval(interval);
+            actionFunction?.();
+            resolve();
+          }
+        }, 100); // Check the condition every 100 milliseconds.
+      });
+    }
+
     // @ Tag-init for basic wrapping tags [$TI]
     const MUNDANE_TAGS = [
       "canvas",
@@ -678,7 +699,17 @@ class Grecha {
     // @ Tagware, @wm
     const windowMethods = {
 
-      HTMLRoot: document.body.parentElement,
+      segPosCenter,
+      When,
+      hydrate,
+
+      HTMLRoot: document.body?.parentElement || (async () => {
+        return await new Promise((resolve, reject) => {
+          When(() => document.body, () => {
+            resolve(HTMLRoot = document.body?.parentElement);
+          })
+        })
+      })(),
 
       SushaWrapper: ElementWrapper,
 
@@ -1008,10 +1039,20 @@ class Grecha {
         const currentLocation = { value: hashLocation };
 
         if (!routes[currentLocation.value]) {
-          currentLocation.value = '#/';
+          currentLocation.value = currentLocation.value['/initial'] ? '/initial' : '/404';
+          currentLocation.state = { id: 0 };
         }
 
-        const state = () => routes[currentLocation.value]?.state || {};
+        if (routes[currentLocation.value]?.state) {
+          routes['/404'] = Object.assign(routes['/404'], {
+            state: { id: 0 }
+          });
+        }
+
+        console.log(routes[currentLocation.value]?.state, currentLocation)
+        
+        const state = () => routes[currentLocation.value]?.state;
+
 
         // ---
 
