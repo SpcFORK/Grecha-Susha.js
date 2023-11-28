@@ -1,0 +1,29 @@
+{
+  "name": "grecha-susha",
+  "version": "1.0.0",
+  "description": "Dead-Simple Front-End JavaScript Framework. Originally designed for emoteJAM. Derived into a more complete framework by Spectcow. The name basically means buckwheat and land in russian.",
+  "main": "grecha-susha.js",
+  "directories": {
+    "example": "examples"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SpcFORK/Grecha-Susha.js.git"
+  },
+  "keywords": [
+    "grecha",
+    "html",
+    "frontend",
+    "js",
+    "framework"
+  ],
+  "author": "SpcFORK",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/SpcFORK/Grecha-Susha.js/issues"
+  },
+  "homepage": "https://github.com/SpcFORK/Grecha-Susha.js#readme"
+}
