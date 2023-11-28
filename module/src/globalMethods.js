@@ -4,6 +4,8 @@ import ElementWrapper from './elementWrapper.js';
 
 const windowMethods = {
 
+  HTMLRoot: document.body.parentElement,
+
   SushaWrapper: ElementWrapper,
 
   tag,
@@ -520,6 +522,314 @@ const windowMethods = {
       )
   },
 
+  AuthorHeaders: {
+    // -=- AUTHORHEADER -=-
+    // -- authorheader.js --
+    // @SpcFORK
+    // @SpectCOW
+    // -=-
+
+    /**
+     * A getter for author info.
+     *
+     * ---
+     * @async
+     * @function
+     * @name AuthorHeader
+
+     * @param {{ location: string | undefined, src: string | undefined }} prefs - The preferences for the author header.
+
+     * @param {Function} cb - A callback function.
+     * @description
+     * Generates the author header for the script.
+     * @example
+     * AuthorHeader({
+     *   location: "./script.js",
+     * }, () => {...})
+     */
+    AuthorHeader(prefs, cb) {
+      prefs ? prefs : (prefs = {});
+      cb ? cb : (cb = function() { });
+
+      // FDAO = "Fucking D-Awesome Object" -Ghostwriter
+      prefs.location = prefs.location || "./script.js";
+
+
+      // Snippeteer Funct #9
+      var checkEnvironment = () => {
+        // So nasty I'd rather write it as if it were a Py function.
+
+        let isImportSupported = false;
+
+        try {
+          eval("import.meta");
+          isImportSupported = true;
+        } catch { }
+
+        if (isImportSupported) {
+          // ES Module environment
+          return "ES Module";
+        } else if (
+          typeof module !== "undefined" &&
+          module?.exports &&
+          typeof window === "undefined"
+        ) {
+          // Node.js environment
+          return "Node";
+        } else if (
+          typeof window !== "undefined" &&
+          typeof window?.document !== "undefined"
+        ) {
+          // Browser environment
+          return "Browser";
+        } else if (
+          typeof WorkerGlobalScope !== "undefined" &&
+          self instanceof WorkerGlobalScope
+        ) {
+          // Web Worker environment
+          return "Web Worker";
+        } else {
+          // Unknown environment
+          return "Unknown";
+        }
+      };
+
+      let _env_ = checkEnvironment();
+
+      async function node_getFile() {
+        let _fs = globalThis?.fs
+          ? globalThis.fs
+          : globalThis?.require?.resolve?.("fs");
+
+        if (_fs) {
+          return _fs.readFileSync(prefs.location, "utf8");
+        }
+      }
+
+      async function node_getFile_async() {
+        let _fs = globalThis?.fs
+          ? globalThis.fs
+          : globalThis?.require?.resolve?.("fs");
+
+        if (_fs) {
+          return await _fs.promises.readFile(prefs.location, "utf8");
+        }
+      }
+
+      async function browser_getFile() {
+        if (prefs.location.startsWith("./")) {
+          prefs.location = prefs.location.slice(2);
+          prefs.location = window.location.toString() + prefs.location;
+        }
+
+        // Fetch the file from the URL
+        let _url = new URL(prefs.location);
+        let _response = await fetch(_url);
+        let _text = await _response.text();
+        return _text;
+      }
+
+      function esm_getFile() {
+        // ES Module environment
+        let _esm = globalThis?.import?.meta?.url;
+        if (_esm) {
+          return _esm;
+        }
+      }
+
+      async function fetchSRC() {
+        switch (_env_) {
+          case "ES Module":
+            return await esm_getFile();
+            break;
+          case "Node":
+            return await node_getFile();
+            break;
+          case "Browser":
+            return await browser_getFile();
+            break;
+          case "Web Worker":
+            return await node_getFile_async();
+            break;
+          case "Unknown":
+            return await node_getFile();
+            break;
+
+          default:
+            return await browser_getFile();
+            break;
+        }
+      }
+
+      async function getFile() {
+        let _src = await fetchSRC();
+        if (_src) {
+          return _src;
+        } else {
+          return "";
+        }
+      }
+
+      async function formatExpectation() {
+        var fulldata = {};
+
+        // Types of AuthorHeader styles
+        // =-= AUTHORHEADER =-=
+        // ...
+        // =-= =-=
+
+        // -=- AUTHORHEADER -=-
+        // ...
+        // -=- -=-
+
+        // *** AUTHORHEADER ***
+        // ...
+        // *** ***
+
+        // ### AUTHORHEADER ###
+        // ...
+        // ### ###
+
+        // Rule: line 1: 3 symbols, +AUTHORHEADER, then same as match 1
+        // Rule: line 2: 3 symbols + space + same as match 1
+
+        let src = prefs?.code || await getFile();
+        // console.log(src);
+        prefs.src = src;
+
+        if (!prefs) {
+          return fulldata;
+        }
+
+        let regex =
+          /^\/[*/] *([^\s]*?[\W]){3} *authorheader *\1{3} *(?:\*\/)*([^]+)\/[*/] *\1{3} *\1{3} *(?:\*\/)*/gim;
+
+        let matchees = regex.exec(prefs.src)?.[2];
+
+        // console.log(matchees);
+
+        if (!matchees) {
+          return fulldata;
+        }
+
+        // COMMENT DESTRCT
+        // Format:
+        // -- {{ location }} --
+        // @{{ Author }}
+        // ${{ METADATA }}
+        // ${{ METADATA }}: {{ METADATA }}
+
+        function commentParser(comments) {
+          let regex = /^\/\/ *([^\n]*?) *(?:\n|$)/gim;
+
+          let matchees = comments.match(regex);
+          // console.log(matchees, 'cmprt');
+          let formatted = [];
+
+          matchees.forEach((match) => {
+            // console.log(match);
+            let formattedMatch = match.replace(/\n/g, "");
+            // console.log(formattedMatch);
+
+            if (formattedMatch.startsWith("/")) {
+              if (formattedMatch.startsWith("//")) {
+                formattedMatch = formattedMatch.replace(/\//g, "");
+              } else if (formattedMatch.startsWith("/*")) {
+                formattedMatch = formattedMatch.replace(/\*/g, "");
+              }
+            }
+
+            formatted.push(formattedMatch);
+          });
+          return formatted;
+        }
+
+        let comments = commentParser(matchees.trim());
+
+        function atDataParser(atData) {
+          atData = atData.slice(1);
+          fulldata?.atData
+            ? fulldata.atData.push(atData)
+            : (fulldata.atData = [atData]);
+          return;
+        }
+
+        function metaParser(meta) {
+          meta = meta.slice(1);
+
+          if (meta.includes(":")) {
+            let metaData = meta.split(":");
+            metaData[0] = metaData[0].trim();
+            metaData[1] = metaData[1].trim();
+
+            metaData = {
+              [metaData[0]]: metaData[1],
+            };
+
+            fulldata?.metaData
+              ? fulldata.metaData.push(metaData)
+              : (fulldata.metaData = [metaData]);
+          } else {
+            fulldata?.meta ? fulldata.meta.push(meta) : (fulldata.meta = [meta]);
+          }
+          return;
+        }
+        function pathParser(path) {
+          path = path.slice(2);
+          path = path.slice(0, -2).trim();
+          fulldata?.path ? fulldata.path.push(path) : (fulldata.path = [path]);
+          return;
+        }
+
+        // console.log(comments);
+
+        comments.forEach((comment) => {
+          if (typeof comment === "string") {
+            let trimmed = comment.trim();
+
+            if (trimmed.startsWith("@")) atDataParser(trimmed);
+            else if (trimmed.startsWith("$")) metaParser(trimmed);
+            else if (trimmed.startsWith("--") && trimmed.endsWith("--"))
+              pathParser(trimmed);
+          } else {
+            return fulldata;
+          }
+        });
+
+        // console.log(fulldata);
+        return fulldata;
+      }
+
+      async function compile() {
+        let formatted = await formatExpectation();
+        if (!formatted) {
+          return;
+        }
+        return formatted;
+      }
+
+      let _returns_ = {
+        compile,
+        getFile,
+        formatExpectation,
+        prefs,
+      };
+
+      cb(_returns_);
+
+      return _returns_;
+    }
+
+    // (async () => {
+    //   let ah = await AuthorHeader({
+    //     location: './script.js'
+    //   });
+    //   console.log(ah);
+    //   console.log(await ah.compile());
+
+    // })();
+
+  },
 
   // @ Expert
   SushaTemplates: {
@@ -568,6 +878,31 @@ const windowMethods = {
 
       ) // @HTML
     },
+    get loadinglinks() {
+      return html(
+        head(
+          tag('title', 'Loading Links'),
+        ),
+        body(
+          main(
+            article(
+              section(
+                h1('Loading Links'),
+                p('The link you requested is loading...'),
+                br(),
+                p('If you are seeing this, it is because the link is not responding.'),
+                br(),
+                hr(),
+                br(),
+                div(
+                  b(`SpcFORK - Grecha-Susha.js | ${new Date().toLocaleString()} - Loading Links`)
+                )
+              )
+            )
+          )
+        )
+      )
+    }
   },
 
   typing: {
@@ -1407,9 +1742,210 @@ const windowMethods = {
         // Do something with x and y, like plotting the wave or storing the coordinates.
       }
     }
+  },
+
+  CICOIconBuilder: function() {
+
+    // === AUTHORHEADER ===
+
+    // -- https://b256.spcfork.repl.co/iconBuilder.js --
+    // @SpcFORK
+    // @SpectCOW
+
+    // === ===
+
+    function canvasToDataURI(canvas) {
+      return canvas.toDataURL("image/png");
+    }
+
+    function drawPixelArt(artString, size = 10, canv) {
+      let colorMap = {
+        'w': 'white',
+        '0': 'black',
+        ' ': 'transparent',
+        '.': 'transparent',
+        'r': 'red',
+        'g': 'green',
+        'b': 'blue',
+        'c': 'cyan',
+        'y': 'yellow',
+        'm': 'magenta',
+        'i': 'indigo',
+        'v': 'violet',
+        'o': 'orange',
+        'p': 'pink',
+        'k': 'gray',
+        'a': 'brown',
+        'e': 'lime',
+        's': 'silver',
+        'z': 'gold',
+        't': 'turquoise',
+        'l': 'limegreen',
+        'n': 'navy',
+        'u': 'purple',
+        'd': 'darkred',
+        'f': 'darkgreen',
+        'j': 'darkblue',
+        'x': 'darkcyan',
+        'q': 'darkyellow',
+      };
+
+      let pixelData = artString.split('\n');
+      let canvas = canv || document.createElement('canvas');
+      let ctx = canvas.getContext('2d');
+      let sizeFactor = size;
+
+      canvas.width = pixelData[0].length * sizeFactor;
+      canvas.height = pixelData.length * sizeFactor;
+
+      for (let y = 0; y < pixelData.length; y++) {
+        for (let x = 0; x < pixelData[y].length; x++) {
+          let color = colorMap[pixelData[y][x]] || 'red'; // Default to red
+          ctx.fillStyle = color;
+          ctx.fillRect(x * sizeFactor, y * sizeFactor, sizeFactor, sizeFactor);
+        }
+      }
+
+      return canvas;
+    }
+
+    window.customElements.define(
+      'spc-icon',
+      class extends HTMLElement {
+        constructor() {
+          super();
+          this.attachShadow({ mode: 'open' });
+          this.load = this.load.bind(this);
+          this.proc = this.proc.bind(this);
+
+          this.shadowRoot.innerHTML = `
+            <style>
+              :host {
+                display: inline-block;
+                position: relative;
+                width: min-content;
+                height: min-content;
+              }
+              .icon {
+                position: absolute;
+                top: 0;
+                left: 0;
+                display: flex;
+                flex-wrap: wrap;
+              }
+            </style>
+            <slot></slot>
+          `;
 
 
-  }
+          // On element load, load();
+          window.addEventListener('DOMContentLoaded', () => {
+            this.load(this.shadowRoot.host);
+          });
+        }
+
+        load(element) {
+
+          if (this.hasAttribute('src')) {
+            this.src = this.getAttribute('src') || '';
+
+            // Fetch the CICO from the URL
+            // -> if ends with cico
+
+            if (this.src.endsWith('.cico')) {
+              fetch(this.src)
+                .then((response) => response.text())
+                .then((data) => {
+                  this.shadowRoot.innerHTML = `
+                    <slot></slot>
+                  `.trim();
+                  this.can = this.appendChild(drawPixelArt(data))
+                  this.proc(this.can);
+                  return
+                });
+              return
+            }
+
+            else {
+              throw new Error(
+                `
+    Invalid .cico URL: ${this.src} !!!
+    Pleace add a .cico extension to the URL!!
+
+    tank yu!
+    `.trim()
+              );
+            }
+          }
+
+          this.can = this.appendChild(
+            drawPixelArt(
+              this.getAttribute('art') ||
+              this.innerHTML ||
+              `
+    000
+    0 0
+      0 
+     0 
+     0 
+
+     0 
+    `.trim()
+            )
+          )
+
+          this.proc(this.can)
+        }
+
+        proc(can) {
+
+          // can.style.width = `${this.shadowRoot.host.offsetWidth}px`;
+          // can.style.height = `${this.shadowRoot.host.offsetHeight}px`;
+
+          can.style.width = `${can.width}px`;
+          can.style.height = `${can.height}px`;
+          can.style.display = 'block';
+
+          // Set class icon to canvas
+          can.classList.add('icon');
+
+          setInterval(() => {
+            // requestAnimationFrame so we can make API
+            requestAnimationFrame(() => {
+              this?.update?.(this.can)
+
+              if (this.src) {
+                this.can.src = this.src;
+
+                let ref_ = Reflect.get(window, this.src)
+
+                if (ref_) {
+                  // Call update if exists
+                  ref_
+                    ?.update
+                    ?.(this)
+                }
+              }
+            })
+
+          }, 1000 / 60);
+        }
+
+        redraw(input) {
+          if (!(this.can instanceof HTMLCanvasElement)) {
+            return
+          }
+
+          this.can.replaceWith(drawPixelArt(input, 10, this.can))
+        }
+      }
+    )
+
+    return {
+      drawPixelArt,
+      canvasToDataURI
+    };
+  }()
 }
 
 export default windowMethods;

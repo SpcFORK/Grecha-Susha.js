@@ -27,7 +27,7 @@
         return div(
           h1("Grecha.js"),
 
-          div(a("Foo").att$("href", "examples")),
+          div(a("Foo").att$("href", "#/foo")),
           div(a("Bar").att$("href", "#/bar")),
 
           div(`Counter: ${count()}`),
@@ -48,7 +48,7 @@
       "/bar": () => div(
         h1("Bar"),
         p(LOREM),
-        div(a("Home").att$("href", "#")),
+        div(a("Home").att$("href", "#"))
       ),
 
       // Working 404
