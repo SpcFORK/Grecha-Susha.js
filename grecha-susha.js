@@ -1044,15 +1044,14 @@ class Grecha {
         }
 
         if (routes[currentLocation.value]?.state) {
-          routes['/404'] = Object.assign(routes['/404'], {
+          routes[currentLocation.value] = Object.assign(routes[currentLocation.value], {
             state: { id: 0 }
           });
         }
 
         console.log(routes[currentLocation.value]?.state, currentLocation)
         
-        const state = () => routes[currentLocation.value]?.state;
-
+        const state = () => routes[currentLocation.value]?.state || { id: 0 };
 
         // ---
 
