@@ -38,3 +38,5 @@ const r = router({
 });
 
 entry.appendChild(r);
+
+console.log('asd')

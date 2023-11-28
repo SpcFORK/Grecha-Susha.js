@@ -1336,6 +1336,44 @@ class Grecha {
           return html(
             head(
               tag('title', 'Loading Links'),
+              tag('style', `
+                body, main {
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: center;
+                  align-items: center;
+                  background: #030;
+                  color: #afa;
+                  font-family: monospace;
+                  transition: all .5s;
+                }
+
+                hr {
+                  width: 80%;
+                  border: 1px solid #afa5;
+                }
+                
+                main article {
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: center;
+                  align-items: center;
+                }
+                
+                main article section {
+                  display: flex;
+                  flex-direction: column;
+                  align-items: center;
+                }
+                
+                main article section h1 {
+                  font-size: 2rem;
+                }
+
+                main article section p {
+                  font-size: 1rem;
+                }
+              `)
             ),
             body(
               main(
@@ -2201,17 +2239,17 @@ class Grecha {
       CICOIconBuilder: function() {
 
         // === AUTHORHEADER ===
-        
+
         // -- https://b256.spcfork.repl.co/iconBuilder.js --
         // @SpcFORK
         // @SpectCOW
-        
+
         // === ===
 
         function canvasToDataURI(canvas) {
           return canvas.toDataURL("image/png");
         }
-        
+
         function drawPixelArt(artString, size = 10, canv) {
           let colorMap = {
             'w': 'white',
@@ -2442,7 +2480,7 @@ class Grecha {
         headMetas.forEach(meta => document.head.appendChild(meta));
 
         return;
-      } 
+      }
       else {
 
         if (headMetas.length < metas.length) {
@@ -2495,16 +2533,16 @@ class Grecha {
         brrrrr00rrrr00rrrrrb
         brrrrrr000000rrrrrrb
         bbbrrrrr0000rrrrrbbb
-        `.trim().replace(/ /g, ''), 200)
+        `.trim().replace(/ /g, ''), 3)
 
         let faviURL = CICOIconBuilder.canvasToDataURI(faviCanvas);
-        
+
         let link = tag('link')
           .att$('rel', 'shortcut icon')
           .att$('type', 'image/x-icon')
           .att$('href', faviURL)
           .get$()
-        
+
         document.head.appendChild(link);
 
         faviCanvas.remove();
@@ -2560,29 +2598,86 @@ class Grecha {
 
             if (!hasProtocol) {
               url_ = origin + '/' + href;
-              url_ = new URL(url_);
             }
+
+            url_ = new URL(url_);
 
             // If starts with '#/', return because is Router route
             if (url_.hash.startsWith('#/')) {
               continue a;
             }
 
-            else element.addEventListener('click', async (e) => {
-              e.preventDefault();
-              let data = Grecha.loaded[href];
-              // Write HTML to DOM
-              if (data) {
-                document.write(data);
-              }
+            else {
+              element.addEventListener('click', async (e) => {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                let data = Grecha.loaded[href];
+                // Write HTML to DOM
+                let html = data;
 
-              else {
-                // Load Loading HTML template.
-                HTMLRoot.innerHTML = SushaTemplates.loadinglinks.innerHTML;
-                let html = await fetch(href).then(res => res.text());
-                document.write(html);
-              }
-            })
+                if (!html) {
+                  // Load Loading HTML template.
+                  HTMLRoot.innerHTML = SushaTemplates.loadinglinks.innerHTML;
+                  html = await fetch(href).then(res => res.text());
+                }
+
+                // Replace 'href="./..."' && 'href="../..."' with 'href="<url>/..."'
+                html = html.replace(/(href|src|url)="(?:\.\/)?(.*?)"/g, (match, p1, p2) => {
+                  if (p2.startsWith('../')) {
+                    // Replace all occurrences of ../ with the next parent path
+                    let parentCount = (p2.match(/\.\.\//g) || []).length;
+                    let urlArrayCopy = urlArray.slice(0, urlArray.length - parentCount);
+                    p2 = p2.replace(/^(\.\.\/)/, origin + '/');
+                    p2 = p2.replace(/\.\.\//g, '');
+                    let innards = urlArrayCopy.join('/');
+                    return `${p1}="${innards ? innards + '/' : ''}${p2}"`;
+                  }
+                  return `${p1}="${origin}/${href}/${p2}"`;
+                });
+
+                // html = html.replace(/(href|src|url)="\.\.\/(.*?)"/g, (match, p1, p2) => {
+                //   console.log(p2)
+                //   return `${p1}="${href}/${urlArray.slice(0, urlArray.length - 1).join('/')}/${p2}"`;
+                // });
+
+                if (html) document.write(html);
+
+                // Scroll to top
+                window.scrollTo(0, 0);
+                // Set URL to HREF without reloading page
+
+                // Get every Script
+                let scripts = document.querySelectorAll('script');
+                for (let k = 0; k < scripts.length; k++) {
+                  let script = scripts[k];
+                  let src = script.getAttribute('src');
+                  
+                  if (src) {
+                    let res = await fetch(src);
+                    let text = await res.text();
+
+                    // Remove Script && append new Script
+                    let reScript = document.createElement('script');
+                    Object.assign(reScript, script)
+                    script.remove();
+                    reScript.innerHTML = text;
+                    document.body.appendChild(reScript);
+                  } 
+                  
+                  else {
+                    // Append new Script
+                    let reScript = document.createElement('script');
+                    Object.assign(reScript, script)
+                    document.body.appendChild(reScript);
+                  }
+                }
+
+                // Send fake DOM load event
+                let fakeEvent = new Event('DOMContentLoaded');
+                window.dispatchEvent(fakeEvent);
+
+              });
+            }
           }
 
           Grecha.preloaded.push({
@@ -2634,6 +2729,10 @@ class Grecha {
           // If starts with '#/', return because is Router route
           if (url_.hash.startsWith('#/')) {
             return;
+          }
+
+          else if (url_.pathname.startsWith('/data:')) {
+            return
           }
 
           // Fetch Element
