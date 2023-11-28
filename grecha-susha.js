@@ -2548,6 +2548,132 @@ class Grecha {
         }
       },
 
+      TrieNode: class {
+        constructor() {
+          this.children = {};
+          this.isWord = false;
+        }
+      },
+
+      TrieStorage: class {
+        constructor() {
+          this.root = new TrieNode();
+        }
+
+        add(word) {
+          let node = this.root;
+          for (const char of word) {
+            if (!node.children[char]) {
+              node.children[char] = new TrieNode();
+            }
+            node = node.children[char];
+          }
+          node.isWord = true;
+        }
+
+        search(word) {
+          let node = this.root;
+          for (const char of word) {
+            if (!node.children[char]) {
+              return false;
+            }
+            node = node.children[char];
+          }
+          return node.isWord;
+        }
+
+        startsWith(prefix) {
+          let node = this.root;
+          for (const char of prefix) {
+            if (!node.children[char]) {
+              return false;
+            }
+            node = node.children[char];
+          }
+          return true;
+        }
+
+        remove(word) {
+          const _remove = (node, word, depth) => {
+            if (depth === word.length) {
+              if (node.isWord) {
+                node.isWord = false;
+                return Object.keys(node.children).length === 0;
+              }
+              return false;
+            }
+            const char = word[depth];
+            if (!node.children[char]) {
+              return false;
+            }
+            const shouldDelete = _remove(node.children[char], word, depth + 1);
+            if (shouldDelete) {
+              delete node.children[char];
+              return Object.keys(node.children).length === 0;
+            }
+            return false;
+          };
+
+          _remove(this.root, word, 0);
+        }
+
+        getAllWords(node = this.root, word = '', words = []) {
+          if (node.isWord) {
+            words.push(word);
+          }
+          for (const char in node.children) {
+            this.getAllWords(node.children[char], word + char, words);
+          }
+          return words;
+        }
+      },
+
+      SushaTrie: class {
+        constructor(...words) {
+          this.storage = new TrieStorage();
+          for (const word of words) {
+            this.storage.add(word);
+          }
+        }
+
+        add(word) {
+          return this.storage.add(word);
+        }
+
+        search(word) {
+          return this.storage.search(word);
+        }
+
+        startsWith(prefix) {
+          return this.storage.startsWith(prefix);
+        }
+
+        remove(word) {
+          return this.storage.remove(word);
+        }
+
+        getAllWords() {
+          return this.storage.getAllWords();
+        }
+
+        getRandomWord() {
+          let words = this.getAllWords();
+          return words[Math.floor(Math.random() * words.length)];
+        }
+
+        getRandomWordWithPrefix(prefix) {
+          let words = this.getAllWords();
+          let filteredWords = words.filter(word => word.startsWith(prefix));
+          return filteredWords[Math.floor(Math.random() * filteredWords.length)];
+        }
+
+        getRandomWordWithSuffix(suffix) {
+          let words = this.getAllWords();
+          let filteredWords = words.filter(word => word.endsWith(suffix));
+          return filteredWords[Math.floor(Math.random() * filteredWords.length)];
+        }
+      },
+
       CICOIconBuilder: function() {
 
         // === AUTHORHEADER ===
