@@ -1048,8 +1048,6 @@ class Grecha {
             state: { id: 0 }
           });
         }
-
-        console.log(routes[currentLocation.value]?.state, currentLocation)
         
         const state = () => routes[currentLocation.value]?.state || { id: 0 };
 
