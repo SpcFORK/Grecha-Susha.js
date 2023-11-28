@@ -517,9 +517,11 @@ class Grecha {
               element.addEventListener('click', async (e) => {
                 e.preventDefault();
                 e.stopImmediatePropagation();
-                let data = Grecha.loaded[href];
+                let data = __Grecha__.loaded[href];
                 // Write HTML to DOM
                 let html = data;
+
+                console.log(__Grecha__.loaded)
 
                 if (!html) {
                   // Load Loading HTML template.
@@ -541,7 +543,7 @@ class Grecha {
                   return `${p1}="${origin}/${href}/${p2}"`;
                 });
 
-                if (html) document.write(html);
+                document.write(html ?? '');
 
                 // Scroll to top
                 window.scrollTo(0, 0);
@@ -591,11 +593,15 @@ class Grecha {
             }
           }
 
-          Grecha.preloaded.push({
+          let struct = {
             tag: element,
             attribute: entryName,
             value: element.getAttribute(entryName)
-          });
+          }
+
+          if (!Grecha.preloaded.includes(struct)) {
+            Grecha.preloaded.push(struct);
+          }
         }
       }
 
@@ -606,7 +612,7 @@ class Grecha {
 
       // Loop through every preloaded element
       await new Promise(async (resolve, reject) => {
-        for (let i = 0; i < Grecha.preloaded.length; i++) {
+        g: for (let i = 0; i < Grecha.preloaded.length; i++) {
           let element = Grecha.preloaded[i];
 
           // Construct URL
@@ -633,28 +639,34 @@ class Grecha {
             switch (fileExtention) {
               case 'html':
                 break;
-              default: return
+              default: continue g;
             }
           }
 
           // If starts with '#/', return because is Router route
           if (url_.hash.startsWith('#/')) {
-            return;
+            continue;
           }
 
           else if (url_.pathname.startsWith('/data:')) {
-            return
+            continue
           }
 
           // Fetch Element
           let fetchedElement = await fetch(url);
           let fetchedElementText = await fetchedElement.text();
 
-          Grecha.loaded.push({
+          let struct = {
+
             tag: element,
             attribute: element.attribute,
             value: fetchedElementText
-          });
+
+          }
+
+          if (!Grecha.preloaded.includes(struct)) {
+            Grecha.preloaded.push(struct);
+          }
         }
       })
     }
@@ -901,7 +913,7 @@ class Grecha {
             set: function(value) {
               // Put into Shout.total
               Object.assign(Shout.total[name], {
-                [typeof value  == 'string' ? value : (value.name || keystore+`_${typeof value}`)]: value
+                [typeof value == 'string' ? value : (value.name || keystore + `_${typeof value}`)]: value
               })
               keystore++
             },
