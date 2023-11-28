@@ -1008,7 +1008,7 @@ class Grecha {
         const currentLocation = { value: hashLocation };
 
         if (!routes[currentLocation.value]) {
-          currentLocation.value = '/';
+          currentLocation.value = '#/';
         }
 
         const state = () => routes[currentLocation.value].state;
@@ -1054,7 +1054,7 @@ class Grecha {
           },
 
           // @ CREDIT (FORK): juniorrantila
-          useState(initialValue) {
+          useState(initialValue = 0) {
             const id = state().id++;
 
             state()[id] = state()[id] ?? initialValue;
