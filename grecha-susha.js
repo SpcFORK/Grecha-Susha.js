@@ -108,7 +108,7 @@ class Grecha {
 
               // Get wrapped element
 
-              console.log(w);
+              // console.log(w);
               cw.element.innerHTML = w.innerHTML;
               w.innerHTML = '';
 
@@ -542,7 +542,7 @@ class Grecha {
                 // Write HTML to DOM
                 let html = data;
 
-                console.log(__Grecha__.loaded)
+                // console.log(__Grecha__.loaded)
 
                 if (!html) {
                   // Load Loading HTML template.
@@ -1048,7 +1048,7 @@ class Grecha {
             state: { id: 0 }
           });
         }
-        
+
         const state = () => routes[currentLocation.value]?.state || { id: 0 };
 
         // ---
@@ -2209,7 +2209,7 @@ class Grecha {
         *
         *  });
         */
-      sushaTransport: class SushaTransport {
+      SushaTransport: class SushaTransport {
         constructor(url) {
           if ('WebTransport' in window) {
             this.transport = new WebTransport(url);
@@ -2316,28 +2316,33 @@ class Grecha {
           }
         }
 
-        async setUpBidirectional() {
+        async setUpBidirectional(transport) {
           try {
             const { writable, readable } = await transport.createBidirectionalStream();
 
-            // Use the writable and readable streams for sending and receiving data
-            // For example, to write to the writable stream:
-            const writer = writable.getWriter();
-            const encoder = new TextEncoder();
-            const data = encoder.encode('data to send');
-            await writer.write(data);
-            await writer.close();
+            // Use the writable for sending data
+            const send = async (data) => {
+              const writer = writable.getWriter();
+              const encoder = new TextEncoder();
+              await writer.write(encoder.encode(data));
+              writer.releaseLock();
+            };
 
-            // To read from the readable stream:
-            const reader = readable.getReader();
-            while (true) {
-              const { value, done } = await reader.read();
-              if (done) {
-                break;
+            // Use the readable for receiving data
+            const receive = async () => {
+              const reader = readable.getReader();
+              try {
+                while (true) {
+                  const { value, done } = await reader.read();
+                  if (done) break;
+                  console.log(new TextDecoder().decode(value));
+                }
+              } finally {
+                reader.releaseLock();
               }
-              console.log(new TextDecoder().decode(value));
-            }
+            };
 
+            return { send, receive };
           } catch (error) {
             console.error('Error setting up bidirectional stream:', error);
           }
