@@ -1011,7 +1011,7 @@ class Grecha {
           currentLocation.value = '#/';
         }
 
-        const state = () => routes[currentLocation.value].state;
+        const state = () => routes[currentLocation.value]?.state || {};
 
         // ---
 
