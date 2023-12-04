@@ -68,7 +68,7 @@ class Grecha {
         count
       }
 
-      Object.defineProperty(window, name, {
+      Object.defineProperty(globalThis, name, {
         get: function() {
           count++
           if (Shout.total?.[name]) {
