@@ -16,7 +16,7 @@ class Grecha {
 
           // Object.keys(source[key]).forEach((prop) => {
           //   console.log(prop, source[key])
-          
+
           // });
 
           [Object.getOwnPropertyDescriptors(key)].forEach((prop, index) => {
@@ -62,6 +62,8 @@ class Grecha {
     createShout(name = '', cb = function() { }) {
       let count = 0;
       let keystore = 0;
+      let Shout = this;
+
       Shout.total[name] = {
         count
       }
@@ -1399,9 +1401,9 @@ class Grecha {
          * @async
          * @function
          * @name AuthorHeader
-         
+
          * @param {{ location: string | undefined, src: string | undefined }} prefs - The preferences for the author header.
-         
+
          * @param {Function} cb - A callback function.
          * @description
          * Generates the author header for the script.
@@ -1755,20 +1757,20 @@ class Grecha {
                   width: 80%;
                   border: 1px solid #afa5;
                 }
-                
+
                 main article {
                   display: flex;
                   flex-direction: column;
                   justify-content: center;
                   align-items: center;
                 }
-                
+
                 main article section {
                   display: flex;
                   flex-direction: column;
                   align-items: center;
                 }
-                
+
                 main article section h1 {
                   font-size: 2rem;
                 }
@@ -2257,29 +2259,29 @@ class Grecha {
 
       /** 
         * The code defines a class called SushaTransport that is intended to manage WebTransport connections. WebTransport is a protocol that allows browsers to send and receive data over HTTP/3.
-       
+
         Here's a breakdown of each part:
-        
+
         constructor(url): This is the constructor method that creates an instance of SushaTransport. It takes a URL as an argument. It then checks if the browser supports WebTransport. If not, it throws an error.
-        
+
         async connect(): This method establishes the WebTransport connection. It waits until the transport is ready before logging that the connection is established.
-        
+
         async sendData(data): This method allows sending text data over a unidirectional stream (one-way communication). It encodes the text data and writes it to a stream.
-        
+
         async writeData(writable): This method writes predefined Uint8Array data to the provided writable stream.
-        
+
         async readData(readable): This method reads data from the provided readable stream, logs the data to the console, and stops when there's no more data.
-        
+
         async receiveData(): This is an improved method to receive data from a readable stream attached to this.stream. It decodes the received bytes to text and logs them to the console.
-        
+
         async closeConnection(): This method closes the WebTransport connection, handles the closure of the transport, and logs whether the transport closed gracefully or due to an error.
-        
+
         async receiveUnidirectional(): This method listens for incoming unidirectional streams from the server and logs the received data after decoding it from bytes to text.
-        
+
         async setUpBidirectional(): This method sets up a bidirectional stream (two-way communication) and demonstrates how to send and receive data through it.
-        
+
         async receiveBidirectional(): This method handles incoming bidirectional streams. For each bidirectional stream, it starts reading and writing data in parallel until there are no more streams.
-        
+
         This code would be used in a web application where there's a need to send and receive data in real-time with low latency, such as in gaming or live streaming apps. The class simplifies managing the complex WebTransport API by providing methods for common tasks like connecting, sending, and receiving data.
         *
         *  Example:
@@ -2467,23 +2469,23 @@ class Grecha {
       },
 
       /** This code is defining a property called xmlRequest inside an object named SushaXML. The property is a getter function that returns a class definition when it's accessed. Let's break down the complex parts into simpler language.
-       
+
       Class Definition: The code is defining a new class called SushaXMLRequest which extends from XMLHttpRequest. In simple terms, the SushaXMLRequest class has all the capabilities of XMLHttpRequest with some added functionalities. XMLHttpRequest is a built-in browser object that allows you to make network requests to retrieve data from a server, commonly used for AJAX calls.
-       
+
       Constructor: The constructor is a special method for creating and initializing an object created with a class. In this case, SushaXMLRequest's constructor accepts url, options, and a set of callbacks (cbs) but with a default empty object {} if no callbacks are provided.
-       
+
       Super Call: The super(url, options); line is calling the constructor of the parent class XMLHttpRequest with the url and options provided. This is necessary to ensure that the object is properly set up as an XMLHttpRequest.
-       
+
       Callbacks Assignment: this.cbs is assigned the result of merging a _evlB object (explained later) with the provided callbacks. Object.assign is used to merge these objects together. This sets up a series of event listeners based on the callbacks provided.
-       
+
       Event Listeners: addEventListener is used in a loop over all the keys of this.cbs to automatically subscribe to the events with the corresponding methods defined in cbs.
-       
+
       Getter Method: get handleEvent() is a getter that returns a function. The function logged to log.textContent the type of the event that occurred and the number of bytes transferred during that event.
-       
+
       _evlB Property: _evlB is a getter that returns an object with keys corresponding to various event types like loadstart, load, loadend, progress, error, and abort. Each key is associated with this.handleEvent which implies each event is handled by the handleEvent function returned by the getter get handleEvent().
-       
+
       Here's the overall functionality in simpler terms:
-       
+
       When SushaXML.xmlRequest is accessed, it provides you with a special class for sending network requests (SushaXMLRequest).
       You can create an instance of SushaXMLRequest with a specified URL, optional settings (options), and various event callbacks.
       It automatically sets up listeners for several types of events and logs information to the log element whenever these events trigger.
