@@ -74,7 +74,7 @@ class Grecha {
           if (Shout.total?.[name]) {
             Object.assign(Shout.total[name], { count })
           }
-          return cb(count)
+          return cb(count, Shout.total?.[name])
         },
 
         set: function(value) {
