@@ -3,6 +3,113 @@ class Grecha {
   static preloaded = [];
   static loaded = [];
 
+  static vampire = // A Dynamic class mashing system system
+    {
+      stealMethods(target, ...source) {
+        for (const key of source) {
+          // Object.getOwnPropertyNames(source[key]).forEach((prop) => {
+          //   if (typeof source[prop] === 'function') {
+          //     target[prop] = source[prop];
+          //   }
+          //   console.log(prop, source[prop])
+          // });
+
+          // Object.keys(source[key]).forEach((prop) => {
+          //   console.log(prop, source[key])
+          
+          // });
+
+          [Object.getOwnPropertyDescriptors(key)].forEach((prop, index) => {
+            console.log(prop, key)
+            Object.assign(target, {
+              [key.name]: prop
+            });
+          });
+        }
+
+        return target;
+      },
+
+      // Dynamic inheritance
+      extend(target, source) {
+        this.stealMethods(target, source);
+        return target;
+
+      },
+
+      create(proto) {
+        const t = Object.create(proto);
+        this.stealMethods(t, proto);
+        return t;
+      },
+
+      createTwins(target1, target2) {
+        // Get both of eachothers methods, and give them to the new twins
+        // Now they will have all of their two combined methodsets
+        const twin1 = this.create(target1);
+        const twin2 = this.create(target2);
+
+        this.stealMethods(twin1, target1);
+        this.stealMethods(twin2, target2);
+
+        return [twin1, twin2];
+      }
+    }
+
+  static Shout = {
+    total: {},
+
+    createShout(name = '', cb = function() { }) {
+      let count = 0;
+      let keystore = 0;
+      Shout.total[name] = {
+        count
+      }
+
+      Object.defineProperty(window, name, {
+        get: function() {
+          count++
+          if (Shout.total?.[name]) {
+            Object.assign(Shout.total[name], { count })
+          }
+          return cb(count)
+        },
+
+        set: function(value) {
+          // Put into Shout.total
+          Object.assign(Shout.total[name], {
+            [typeof value == 'string' ? value : (value.name || keystore + `_${typeof value}`)]: value
+          })
+          keystore++
+        },
+
+        enumerable: true,
+        configurable: true
+      });
+
+    },
+
+    destroyShout(name) {
+
+      if (!this.total.includes(name)) {
+        throw new Error(`Shout ${name} not found`);
+      }
+
+      delete window[name];
+      this.total = this.total.filter(n => n !== name);
+
+    },
+
+    isShout(name) {
+      if (!this.total.includes(name) || window[name][Symbol.for('shout')].is === false) {
+        return false;
+      }
+
+      return true;
+    },
+
+  }
+
   constructor(window) {
     let g_ = this;
 
@@ -477,7 +584,6 @@ class Grecha {
     // ---
 
 
-
     async function hydrate() {
 
       // Get every href attribute
@@ -696,12 +802,54 @@ class Grecha {
       })
     }
 
-    // @ Tagware, @wm
+
+    // @ Tagware, @wim
     const windowMethods = {
 
       segPosCenter,
       When,
       hydrate,
+      Vampire: __Grecha__.Vampire,
+
+      async fadeIn(element, i = 15) {
+        return new Promise((resolve, reject) => {
+          let opacity = parseFloat(element.style.opacity) || 0;
+          const step = 0.1;
+
+          async function increment() {
+            if (opacity < 1) {
+              opacity += step;
+              element.style.opacity = String(opacity);
+              await sleep(i);
+              requestAnimationFrame(increment);
+            } else {
+              resolve();
+            }
+          }
+
+          increment();
+        })
+      },
+
+      async fadeOut(element, i = 15) {
+        return new Promise((resolve, reject) => {
+          let opacity = parseFloat(element.style.opacity) || 1;
+          const step = 0.1;
+
+          async function decrement() {
+            if (opacity > 0) {
+              opacity -= step;
+              element.style.opacity = String(opacity);
+              await sleep(i);
+              requestAnimationFrame(decrement);
+            } else {
+              resolve();
+            }
+          }
+
+          decrement();
+        })
+      },
 
       HTMLRoot: document.body?.parentElement || (async () => {
         return await new Promise((resolve, reject) => {
@@ -926,59 +1074,7 @@ class Grecha {
         }
       },
 
-      Shout: {
-        total: {},
-
-        createShout(name = '', cb = function() { }) {
-          let count = 0;
-          let keystore = 0;
-          Shout.total[name] = {
-            count
-          }
-
-          Object.defineProperty(window, name, {
-            get: function() {
-              count++
-              if (Shout.total?.[name]) {
-                Object.assign(Shout.total[name], { count })
-              }
-              return cb(count)
-            },
-
-            set: function(value) {
-              // Put into Shout.total
-              Object.assign(Shout.total[name], {
-                [typeof value == 'string' ? value : (value.name || keystore + `_${typeof value}`)]: value
-              })
-              keystore++
-            },
-
-            enumerable: true,
-            configurable: true
-          });
-
-        },
-
-        destroyShout(name) {
-
-          if (!this.total.includes(name)) {
-            throw new Error(`Shout ${name} not found`);
-          }
-
-          delete window[name];
-          this.total = this.total.filter(n => n !== name);
-
-        },
-
-        isShout(name) {
-          if (!this.total.includes(name) || window[name][Symbol.for('shout')].is === false) {
-            return false;
-          }
-
-          return true;
-        },
-
-      },
+      Shout: __Grecha__.Shout,
 
       // @ Basic
       img(src, alt) {
@@ -2674,7 +2770,10 @@ class Grecha {
         }
       },
 
-      CICOIconBuilder: function() {
+      // A Dynamic Request system
+      // SushaRequest: Grecha.vampire.stealMethods({}, Request, XMLHttpRequest, XMLDocument, XSLTProcessor),
+
+      CICOIconBuilder: ((function() {
 
         // === AUTHORHEADER ===
 
@@ -2879,7 +2978,134 @@ class Grecha {
           drawPixelArt,
           canvasToDataURI
         };
-      }()
+      })()),
+
+      // @ True Expert
+      SushaApp: new class SushaApp {
+        static _depCount = 0;
+        static _depsDone = 0;
+
+        constructor() {
+          this.data = { preloaded: {} };
+          this.apps = new Map();
+          this.static = SushaApp;
+          this.done = false;
+          this.EventBus = {
+            events: {},
+
+            on(event, listener) {
+              if (!this.events[event]) {
+                this.events[event] = new Set();
+              }
+              this.events[event].add(listener);
+            },
+
+            off(event, listenerToRemove) {
+              if (!this.events[event]) {
+                return;
+              }
+              this.events[event].delete(listenerToRemove);
+            },
+
+            emit(event, data) {
+              if (!this.events[event]) {
+                return;
+              }
+              this.events[event].forEach(listener => listener(data));
+            }
+          }
+
+          this.EventBus.on('appReady', (app) => {
+            this.done = true;
+          })
+        }
+
+        registerApp(appConfig) {
+          const { name, url, exec, el, sync = false } = appConfig;
+          if (this.apps.has(name)) {
+            throw new Error(`App "${name}" is already registered.`);
+          }
+          this.apps.set(name, { url, exec, el, sync });
+          window.EventBus.emit('appRegistered', { name, url });
+        }
+
+        registerDepenency(data) {
+          const id = Symbol();
+          this.data.preloaded[id] = data;
+          return id;
+        }
+
+        Dependants(...promiseArray) {
+          this.done = false;
+          return new Promise((resolve, reject) => {
+            Promise.all(promiseArray).then((results) => {
+              SushaApp._depCount += results.length;
+              SushaApp._depsDone = SushaApp._depCount; // Assuming all deps are now done
+              const idArray = results.map(promiseResult => this.registerDepenency(promiseResult));
+              resolve(idArray);
+              if (SushaApp._depsDone === SushaApp._depCount) {
+                this.done = true;
+                EventBus.emit('appReady');
+              }
+            }).catch(reject);
+          });
+        }
+
+        async launchApp(name) {
+          const app = this.apps.get(name);
+          if (!app) {
+            throw new Error(`App "${name}" is not registered.`);
+          }
+          EventBus.emit('appLaunchAttempt', { name });
+
+          try {
+            const content = app.sync && this.data.preloaded[name]
+              ? this.data.preloaded[name]
+              : await this.fetchResource(app.url);
+            app.exec(app.el, content);
+            EventBus.emit('appLaunched', {
+              name,
+              method: app.sync && this.data.preloaded[name] ? 'preload' : 'fetch'
+            });
+            if (app.sync) {
+              this.data.preloaded[name] = content;
+            }
+          } catch (error) {
+            console.error(`Failed to launch "${name}": ${error.message}`);
+            EventBus.emit('appLaunchFailed', { name, error });
+          }
+        }
+
+        async fetchResource(url) {
+          const response = await fetch(url);
+          if (!response.ok) {
+            throw new Error(`Failed to load "${url}": ${response.status}`);
+          }
+          const content = await response.text();
+          EventBus.emit('resourceFetched', { url, content });
+          return content;
+        }
+
+        async preloadResource(name, url) {
+          try {
+            const response = await fetch(url);
+            if (!response.ok) {
+              throw new Error(`Failed to preload "${url}": ${response.status}`);
+            }
+            const content = await response.text();
+            this.data.preloaded[name] = content;
+            EventBus.emit('resourcePreloaded', { name, url, content });
+          } catch (error) {
+            console.error(`Failed to preload "${name}": ${error.message}`);
+          }
+        }
+
+        static createApp(name, url, exec, el, sync = false) {
+          const app = new SushaApp();
+          app.registerApp({ name, url, exec, el, sync });
+          return app;
+        }
+      },
     }
 
     // ---
@@ -2940,7 +3166,7 @@ class Grecha {
 
             } else {
               headMetas.forEach(meta_ => {
-                if (meta.getAttribute('name') == meta_.getAttribute('name')) {
+                if (meta.get$().getAttribute('name') == meta_.getAttribute('name')) {
                   create_meta(meta);
                 }
               })
