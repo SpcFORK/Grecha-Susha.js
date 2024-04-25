@@ -13,9 +13,9 @@ The name basically means [buckwheat](https://en.wikipedia.org/wiki/Buckwheat) an
 
 > ### *Make sure you only download official versions of G-Susha from here.*
 > *I don't own these mirrors, and are likely to have anything unwanted in them.*
->
-> *Please only refer to emails listed on my profile here, or [https://spcfork.replit.app](https://spcfork.replit.app).*
 
+> *Please only refer to emails listed on my profile here, or [https://spcfork.replit.app](https://spcfork.replit.app).*
+>
 > *You can get the latest Susha from this Github, the [website](https://sushajs.replit.app/), or even the [Asri Source code](https://asridev.replit.app/), which has a static/stable version.*
 
 > ***I am not liable for damages caused by outside 3rd-Party mirrors.***
