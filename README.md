@@ -16,7 +16,7 @@ The name basically means [buckwheat](https://en.wikipedia.org/wiki/Buckwheat) an
 >
 > *Please only refer to emails listed on my profile here, or [https://spcfork.replit.app](https://spcfork.replit.app).*
 
-> *You can get the latest Susha from this Github, the [website](https://sushajs.replit.app/), or even the [Asri Source](https://asridev.replit.app/) code, which has a static/stable version.*
+> *You can get the latest Susha from this Github, the [website](https://sushajs.replit.app/), or even the [Asri Source code](https://asridev.replit.app/), which has a static/stable version.*
 
 > ***I am not liable for damages caused by outside 3rd-Party mirrors.***
 
