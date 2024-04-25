@@ -9,6 +9,16 @@ Derived into a more complete framework by [Spectcow](https://spcfork.replit.app)
 
 The name basically means [buckwheat](https://en.wikipedia.org/wiki/Buckwheat) and [land](https://en.wikipedia.org/wiki/land) in russian.
 
+---
+
+> ### *Make sure you only download official versions of G-Susha from here.*
+> *I don't own these mirrors, and are likely to have anything unwanted in them.*
+>
+> *Please only refer to emails listed on my profile here, or [https://spcfork.replit.app](https://spcfork.replit.app).*
+
+> ***I am not liable for damages caused by outside 3rd-Party mirrors.***
+
+---
 
 ## Quick Start
 
