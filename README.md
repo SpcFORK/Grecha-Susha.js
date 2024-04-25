@@ -19,6 +19,7 @@ The name basically means [buckwheat](https://en.wikipedia.org/wiki/Buckwheat) an
 > *You can get the latest Susha from this Github, the [website](https://sushajs.replit.app/), or even the [Asri Source code](https://asridev.replit.app/), which has a static/stable version.*
 
 > ***I am not liable for damages caused by outside 3rd-Party mirrors.***
+> ***The Source Code/License allows for usage like this, but it is not reccomended to use these mirrors.***
 
 ---
 
